@@ -1,0 +1,76 @@
+name: Build CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
+        run: ./gradlew clean build --no-daemon
+
+      - name: Verify Artifact Integrity & Plugin Metadata
+        run: |
+          echo "Verifying compiled output artifact..."
+          JAR_FILE=$(ls build/libs/KUpdater-*.jar | head -n 1)
+          if [ -z "$JAR_FILE" ]; then
+            echo "::error::No JAR artifact produced in build/libs/"
+            exit 1
+          fi
+          
+          SIZE=$(stat -c%s "$JAR_FILE" 2>/dev/null || stat -f%z "$JAR_FILE")
+          echo "Artifact path: $JAR_FILE ($SIZE bytes)"
+          if [ "$SIZE" -le 0 ]; then
+            echo "::error::Generated JAR artifact is empty (0 bytes)"
+            exit 1
+          fi
+
+          echo "Inspecting plugin metadata inside JAR..."
+          unzip -p "$JAR_FILE" plugin.yml > plugin_extracted.yml
+          cat plugin_extracted.yml
+
+          grep -q "name: KUpdater" plugin_extracted.yml || { echo "::error::plugin.yml missing expected name 'KUpdater'"; exit 1; }
+          grep -q "main: io.github.kaivian.kupdater.KUpdater" plugin_extracted.yml || { echo "::error::plugin.yml missing main class"; exit 1; }
+
+          echo "Verifying compiled classes inside JAR..."
+          unzip -l "$JAR_FILE" | grep -q "io/github/kaivian/kupdater/KUpdater.class" || { echo "::error::Main class file missing from JAR"; exit 1; }
+
+          echo "Artifact integrity verification PASSED."
+
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KUpdater-build
+          path: build/libs/*.jar

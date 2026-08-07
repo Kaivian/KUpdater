@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.paper.api)
+    testImplementation(libs.junit.jupiter)
 }
 
 java {
@@ -17,6 +18,10 @@ java {
 }
 
 tasks {
+    test {
+        useJUnitPlatform()
+    }
+
     runServer {
         minecraftVersion(libs.versions.minecraft.get())
         jvmArgs("-Xms2G", "-Xmx2G")
@@ -29,3 +34,4 @@ tasks {
         }
     }
 }
+

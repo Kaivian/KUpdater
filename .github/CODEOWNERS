@@ -1,0 +1,17 @@
+# KUpdater CODEOWNERS Template
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Note: To activate Code Owner review requirements, replace the example placeholders below
+# with valid GitHub usernames or team names (e.g., @Kaivian or @org/maintainers).
+# Do not specify unresolvable team handles as they can break pull request merge requirements.
+
+# Global owners for all files in repository
+# *       @Kaivian
+
+# Core infrastructure & build configuration
+# /build.gradle.kts      @Kaivian
+# /.github/              @Kaivian
+
+# Core API & Module framework
+# /src/main/java/io/github/kaivian/kupdater/api/      @Kaivian
+# /src/main/java/io/github/kaivian/kupdater/core/     @Kaivian
