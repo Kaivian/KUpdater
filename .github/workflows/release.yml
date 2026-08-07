@@ -49,7 +49,10 @@ jobs:
           echo "Release version validation PASSED."
 
       - name: Build Release Artifact
-        run: ./gradlew clean build --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build --no-daemon
+
 
       - name: Validate Release Artifact Integrity & Plugin Metadata
         run: |

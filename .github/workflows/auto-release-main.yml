@@ -45,7 +45,10 @@ jobs:
           echo "Building main auto-release for $TAG_NAME (Gradle Version: $VERSION)..."
 
       - name: Build with Gradle
-        run: ./gradlew clean build --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build --no-daemon
+
 
       - name: Validate Release Artifact Integrity & Plugin Metadata
         run: |

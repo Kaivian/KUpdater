@@ -39,7 +39,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
-        run: ./gradlew clean build --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build --no-daemon
+
 
       - name: Verify Artifact Integrity & Plugin Metadata
         run: |
