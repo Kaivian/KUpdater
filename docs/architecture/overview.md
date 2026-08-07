@@ -1,68 +1,41 @@
 # Architectural Overview
 
-This document describes the high-level architecture of **KUpdater**.
+This document describes the high-level multi-module architecture of **KUpdater**.
+
+For full architectural guidelines, dependency matrices, multi-version strategies, and extension guides, see [architecture.md](../architecture.md).
 
 ---
 
-## High-Level Architecture
+## High-Level Multi-Module Hierarchy
 
-KUpdater is built as a lightweight core framework that manages independent, decoupled gameplay modules.
+KUpdater is built as a modular framework with clear layer separation across Gradle subprojects.
 
 ```text
-                     +----------------------+
-                     |   Bukkit / Paper     |
-                     +----------+-----------+
-                                |
-                     +----------v-----------+
-                     |    KUpdater Main     |
-                     +----+-----------+-----+
-                          |           |
-            +-------------+           +-------------+
-            |                                       |
-+-----------v------------+             +------------v-----------+
-|     ConfigManager      |             |     ModuleManager      |
-+------------------------+             +------------+-----------+
-                                                    |
-                                       +------------v-----------+
-                                       |     KModule Interface  |
-                                       +-----+-------------+----+
-                                             |             |
-                                  +----------v---+     +---v----------+
-                                  | ToolsModule  |     | CombatModule |
-                                  +--------------+     +--------------+
+KUpdater
+├── api                     (:api)
+│   └── Public contracts (KModule, ModuleCategory, VersionAdapter)
+├── core                    (:core)
+│   └── Shared infrastructure (ModuleManager, ConfigManager)
+├── platform                (:platform)
+│   ├── common              (:platform:common - PlatformManager)
+│   └── v1_21               (:platform:v1_21 - Paper1_21Adapter)
+├── features                (:features)
+│   ├── tools               (:features:tools - ToolsModule)
+│   ├── progression         (:features:progression - ProgressionModule)
+│   ├── combat              (:features:combat - CombatModule)
+│   ├── farming             (:features:farming - FarmingModule)
+│   ├── mining              (:features:mining - MiningModule)
+│   ├── economy             (:features:economy - EconomyModule)
+│   └── exploration         (:features:exploration - ExplorationModule)
+└── bootstrap               (:bootstrap)
+    └── Assembly & plugin entrypoint (KUpdaterPlugin, plugin.yml)
 ```
 
 ---
 
-## Core Components
+## Core Principles & Design Constraints
 
-### 1. Main Plugin (`KUpdater.java`)
-Entry point for the Paper plugin. Responsibilities:
-* Bootstrapping `ConfigManager` and `ModuleManager`.
-* Triggering module lifecycle handlers during plugin enable/disable phases.
-
-### 2. Configuration Manager (`ConfigManager.java`)
-Handles plugin configuration files:
-* Core configuration loading (`config.yml`).
-* Directory routing for module-specific configuration files (`plugins/KUpdater/modules/<module-id>/`).
-
-### 3. Module Manager (`ModuleManager.java`)
-Registry and lifecycle controller for all `KModule` instances:
-* Registering modules during initialization.
-* Enabling/disabling registered modules safely.
-* Querying modules by ID or `ModuleCategory`.
-
-### 4. Module API (`KModule.java` & `ModuleCategory.java`)
-Abstract contract defining how gameplay features interface with KUpdater:
-* Unique identifier and display name.
-* Category mapping.
-* Lifecycle hooks (`onEnable()`, `onDisable()`).
-* Dynamic status toggling (`isEnabled()`).
-
----
-
-## Design Constraints
-
-* **Strict Decoupling**: Modules must operate independently without hard dependencies on other gameplay modules.
-* **No Direct NMS**: Avoid accessing internal `net.minecraft.server` code directly. Use standard Paper API abstractions.
-* **Fail-Safe Isolation**: An error during a module's execution or enablement should not crash the entire plugin or prevent other modules from functioning.
+* **Strict Subproject Isolation**: Features operate as independent Gradle subprojects without depending on other features or version-specific implementations.
+* **Version Compatibility Abstraction**: Platform/version-dependent code is isolated in `:platform:*` adapters.
+* **Fail-Safe Lifecycle**: An exception during one module's execution will not crash the plugin or prevent other modules from enabling.
+* **Single Shaded Artifact**: `:bootstrap` bundles all subprojects into a single deployable JAR output (`KUpdater-<version>.jar`).

@@ -55,7 +55,7 @@ jobs:
         run: |
           RAW_TAG="${{ github.ref_name }}"
           TAG_VERSION="${RAW_TAG#v}"
-          JAR_FILE=$(ls build/libs/KUpdater-*.jar | head -n 1)
+          JAR_FILE=$(ls bootstrap/build/libs/KUpdater-*.jar | head -n 1)
 
           if [ -z "$JAR_FILE" ]; then
             echo "::error::Release JAR artifact missing!"
@@ -73,7 +73,7 @@ jobs:
           cat release_plugin.yml
 
           grep -q "name: KUpdater" release_plugin.yml || { echo "::error::plugin.yml missing 'name: KUpdater'"; exit 1; }
-          grep -q "main: io.github.kaivian.kupdater.KUpdater" release_plugin.yml || { echo "::error::plugin.yml missing main class"; exit 1; }
+          grep -q "main: io.github.kaivian.kupdater.bootstrap.KUpdaterPlugin" release_plugin.yml || { echo "::error::plugin.yml missing main class"; exit 1; }
 
           EXTRACTED_VERSION=$(grep "^version:" release_plugin.yml | awk '{print $2}' | tr -d "'\"")
           echo "Extracted plugin.yml version: $EXTRACTED_VERSION"
@@ -88,8 +88,8 @@ jobs:
         run: |
           RAW_TAG="${{ github.ref_name }}"
           TAG_VERSION="${RAW_TAG#v}"
-          JAR_FILE=$(ls build/libs/KUpdater-*.jar | head -n 1)
-          CHECKSUM_FILE="build/libs/KUpdater-${TAG_VERSION}.jar.sha256"
+          JAR_FILE=$(ls bootstrap/build/libs/KUpdater-*.jar | head -n 1)
+          CHECKSUM_FILE="bootstrap/build/libs/KUpdater-${TAG_VERSION}.jar.sha256"
 
           sha256sum "$JAR_FILE" | awk '{print $1}' > "$CHECKSUM_FILE"
           echo "Generated SHA-256 Checksum: $(cat $CHECKSUM_FILE)"
@@ -98,8 +98,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/libs/KUpdater-*.jar
-            build/libs/*.sha256
+            bootstrap/build/libs/KUpdater-*.jar
+            bootstrap/build/libs/*.sha256
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
