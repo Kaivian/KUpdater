@@ -1,0 +1,59 @@
+name: Compatibility Issue
+description: Report an incompatibility between KUpdater and another plugin, server software, or MC version
+title: "[Compatibility]: "
+labels: ["compatibility", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report an issue related to Minecraft versioning, server software forks, or plugin collisions.
+
+  - type: input
+    id: mc-version
+    attributes:
+      label: Minecraft Version
+      placeholder: "e.g. 1.21.4 / Paper 26.2"
+    validations:
+      required: true
+
+  - type: input
+    id: server-implementation
+    attributes:
+      label: Server Implementation & Version
+      placeholder: "e.g., Paper-123, Purpur, Folia"
+    validations:
+      required: true
+
+  - type: input
+    id: kupdater-version
+    attributes:
+      label: KUpdater Version
+      placeholder: "e.g., 0.1.0-SNAPSHOT"
+    validations:
+      required: true
+
+  - type: input
+    id: conflicting-plugin
+    attributes:
+      label: Other Plugins / Software Involved
+      placeholder: "e.g., WorldGuard, Slimefun, custom plugin"
+
+  - type: textarea
+    id: problem-details
+    attributes:
+      label: Issue Description
+      description: What unexpected behavior or collision occurs?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error Output
+      render: text
+
+  - type: textarea
+    id: expected-compatibility
+    attributes:
+      label: Expected Compatibility Behavior
+      description: How should KUpdater gracefully handle or coexist with this software?

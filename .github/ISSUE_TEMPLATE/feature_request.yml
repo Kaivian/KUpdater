@@ -1,0 +1,45 @@
+name: Feature Request
+description: Propose a new feature, enhancement, or gameplay module for KUpdater
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We welcome feature proposals that fit KUpdater's philosophy: **Enhance vanilla, don't replace it.**
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Description
+      description: Concise summary of the proposed enhancement or module.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: Is your feature request related to a problem or gap in vanilla gameplay? Describe it here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-behavior
+    attributes:
+      label: Proposed Behavior & Mechanics
+      description: Describe in detail how this feature should work in-game.
+    validations:
+      required: true
+
+  - type: textarea
+    id: config-requirements
+    attributes:
+      label: Configuration Requirements
+      description: What options should server administrators have to toggle or tune this feature?
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility & Multiplayer Considerations
+      description: Describe any safety, performance, or cross-plugin compatibility considerations.

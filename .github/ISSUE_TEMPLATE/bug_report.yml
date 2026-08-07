@@ -1,0 +1,97 @@
+name: Bug Report
+description: Report a bug or issue with KUpdater or one of its modules
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the sections below to help us fix the issue quickly.
+
+  - type: input
+    id: mc-version
+    attributes:
+      label: Minecraft Version
+      description: What Minecraft version is your server running? (e.g. 1.21.x, 26.2)
+      placeholder: "e.g., Paper 1.21.4"
+    validations:
+      required: true
+
+  - type: input
+    id: server-software
+    attributes:
+      label: Server Software
+      description: What server software implementation are you using?
+      placeholder: "e.g., Paper, Purpur, Folia"
+    validations:
+      required: true
+
+  - type: input
+    id: kupdater-version
+    attributes:
+      label: KUpdater Version
+      description: What version of KUpdater are you running?
+      placeholder: "e.g., 0.1.0-SNAPSHOT"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module Affected
+      description: Select the module related to this issue, if applicable.
+      options:
+        - "Core / General"
+        - "Tools"
+        - "Combat"
+        - "Farming"
+        - "Mining"
+        - "Economy"
+        - "Exploration"
+        - "QoL"
+        - "Progression"
+        - "Other / Unknown"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: A clear and concise description of what actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Relevant Configuration
+      description: Paste relevant sections of your config files (e.g., config.yml or module config).
+      render: yaml
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server Logs / Console Output
+      description: Paste stack traces or console output here.
+      render: text
