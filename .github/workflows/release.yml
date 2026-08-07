@@ -95,7 +95,7 @@ jobs:
           echo "Generated SHA-256 Checksum: $(cat $CHECKSUM_FILE)"
 
       - name: Create GitHub Release and Upload Artifacts
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             build/libs/KUpdater-*.jar
