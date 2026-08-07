@@ -1,7 +1,10 @@
 # Gradle artifacts & caches
 .gradle/
+**/.gradle/
 build/
+**/build/
 out/
+
 
 # IDE files
 .idea/

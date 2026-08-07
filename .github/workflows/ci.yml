@@ -39,14 +39,17 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
-        run: ./gradlew clean build --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build --no-daemon
+
 
       - name: Verify Artifact Integrity & Plugin Metadata
         run: |
           echo "Verifying compiled output artifact..."
-          JAR_FILE=$(ls build/libs/KUpdater-*.jar | head -n 1)
+          JAR_FILE=$(ls bootstrap/build/libs/KUpdater-*.jar | head -n 1)
           if [ -z "$JAR_FILE" ]; then
-            echo "::error::No JAR artifact produced in build/libs/"
+            echo "::error::No JAR artifact produced in bootstrap/build/libs/"
             exit 1
           fi
           
@@ -62,10 +65,10 @@ jobs:
           cat plugin_extracted.yml
 
           grep -q "name: KUpdater" plugin_extracted.yml || { echo "::error::plugin.yml missing expected name 'KUpdater'"; exit 1; }
-          grep -q "main: io.github.kaivian.kupdater.KUpdater" plugin_extracted.yml || { echo "::error::plugin.yml missing main class"; exit 1; }
+          grep -q "main: io.github.kaivian.kupdater.bootstrap.KUpdaterPlugin" plugin_extracted.yml || { echo "::error::plugin.yml missing main class"; exit 1; }
 
           echo "Verifying compiled classes inside JAR..."
-          unzip -l "$JAR_FILE" | grep -q "io/github/kaivian/kupdater/KUpdater.class" || { echo "::error::Main class file missing from JAR"; exit 1; }
+          unzip -l "$JAR_FILE" | grep -q "io/github/kaivian/kupdater/bootstrap/KUpdaterPlugin.class" || { echo "::error::Main class file missing from JAR"; exit 1; }
 
           echo "Artifact integrity verification PASSED."
 
@@ -73,4 +76,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: KUpdater-build
-          path: build/libs/*.jar
+          path: bootstrap/build/libs/*.jar
+
