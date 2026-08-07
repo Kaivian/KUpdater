@@ -1,0 +1,93 @@
+name: Auto Release (main)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-release-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  auto-release:
+    name: Auto Release on main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Extract Version Metadata
+        id: meta
+        run: |
+          VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2 | tr -d ' ')
+          CLEAN_VERSION=$(echo "$VERSION" | sed 's/-SNAPSHOT//')
+          TAG_NAME="v${CLEAN_VERSION}-b${{ github.run_number }}"
+          
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Building main auto-release for $TAG_NAME (Gradle Version: $VERSION)..."
+
+      - name: Build with Gradle
+        run: ./gradlew clean build --no-daemon
+
+      - name: Validate Release Artifact Integrity & Plugin Metadata
+        run: |
+          JAR_FILE=$(ls bootstrap/build/libs/KUpdater-*.jar | head -n 1)
+          if [ -z "$JAR_FILE" ]; then
+            echo "::error::Release JAR artifact missing!"
+            exit 1
+          fi
+
+          SIZE=$(stat -c%s "$JAR_FILE" 2>/dev/null || stat -f%z "$JAR_FILE")
+          if [ "$SIZE" -le 0 ]; then
+            echo "::error::Release JAR artifact is empty (0 bytes)!"
+            exit 1
+          fi
+
+          echo "Extracting plugin.yml for verification..."
+          unzip -p "$JAR_FILE" plugin.yml > release_plugin.yml
+          cat release_plugin.yml
+
+          grep -q "name: KUpdater" release_plugin.yml || { echo "::error::plugin.yml missing 'name: KUpdater'"; exit 1; }
+          grep -q "main: io.github.kaivian.kupdater.bootstrap.KUpdaterPlugin" release_plugin.yml || { echo "::error::plugin.yml missing main class"; exit 1; }
+
+          echo "Main auto-release artifact validation PASSED."
+
+      - name: Generate SHA-256 Checksum
+        run: |
+          JAR_FILE=$(ls bootstrap/build/libs/KUpdater-*.jar | head -n 1)
+          CHECKSUM_FILE="bootstrap/build/libs/KUpdater-${{ steps.meta.outputs.TAG_NAME }}.jar.sha256"
+
+          sha256sum "$JAR_FILE" | awk '{print $1}' > "$CHECKSUM_FILE"
+          echo "Generated SHA-256 Checksum: $(cat $CHECKSUM_FILE)"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.TAG_NAME }}
+          name: "KUpdater ${{ steps.meta.outputs.TAG_NAME }}"
+          draft: false
+          prerelease: false
+          files: |
+            bootstrap/build/libs/KUpdater-*.jar
+            bootstrap/build/libs/*.sha256
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
