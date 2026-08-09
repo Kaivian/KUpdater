@@ -1,10 +1,47 @@
 # ==============================================================================
 #                      KUpdater Configuration File
 # ==============================================================================
-# Official Documentation & Persistence Configuration
+# Official Documentation & Module & Persistence Configuration
 # ==============================================================================
 
+# ==============================================================================
+# Gameplay Modules Enable/Disable Configuration
+# ==============================================================================
+# Enable or disable individual gameplay modules.
+# When a module is set to false, it will be skipped during plugin startup.
+# ==============================================================================
+modules:
+  # Tools Progression Module (Supported MC Versions: 1.12 -> 26.2)
+  tools:
+    enabled: true
+
+  # Player Progression Module (Supported MC Versions: 1.8.8 -> 26.2)
+  progression:
+    enabled: true
+
+  # Combat Mechanics Module (Supported MC Versions: 1.20 -> 26.2)
+  combat:
+    enabled: true
+
+  # Farming Enhancements Module (Supported MC Versions: 1.8.8 -> 26.2)
+  farming:
+    enabled: true
+
+  # Mining & Ores Module (Supported MC Versions: 1.8.8 -> 26.2)
+  mining:
+    enabled: true
+
+  # Economy & Shops Module (Supported MC Versions: 1.8.8 -> 26.2)
+  economy:
+    enabled: true
+
+  # Exploration & Structures Module (Supported MC Versions: 1.16.5 -> 26.2)
+  exploration:
+    enabled: true
+
+# ==============================================================================
 # Database Persistence Configuration
+# ==============================================================================
 database:
   # Whether database persistence is enabled.
   # When set to false, KUpdater will NOT attempt to connect to any external database

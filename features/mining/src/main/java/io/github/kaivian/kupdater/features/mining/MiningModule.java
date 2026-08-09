@@ -1,58 +1,33 @@
 package io.github.kaivian.kupdater.features.mining;
 
-import io.github.kaivian.kupdater.api.module.KModule;
+import io.github.kaivian.kupdater.api.module.AbstractKModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
-
-import java.util.Collections;
-import java.util.List;
+import io.github.kaivian.kupdater.api.version.MinecraftVersion;
 
 /**
- * Mining Progression module skeleton.
+ * Mining module implementation.
+ * Supported Minecraft version range: 1.8.8 to 26.2.0.
  */
-public class MiningModule implements KModule {
+public class MiningModule extends AbstractKModule {
 
-    private boolean enabled = false;
-
-    @Override
-    public String getId() {
-        return "mining";
-    }
-
-    @Override
-    public String getName() {
-        return "Mining Module";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Mining progression and quality of life enhancements.";
-    }
-
-    @Override
-    public ModuleCategory getCategory() {
-        return ModuleCategory.MINING;
-    }
-
-    @Override
-    public List<String> getSupportedMinecraftVersions() {
-        return Collections.singletonList("1.21.x");
+    public MiningModule() {
+        super(
+                "mining",
+                "Mining & Ores Module",
+                "Custom mining drops and vein mining mechanics.",
+                ModuleCategory.MINING,
+                MinecraftVersion.V1_8_8,
+                MinecraftVersion.V26_2
+        );
     }
 
     @Override
     public void onEnable() {
+        // Module enablement logic
     }
 
     @Override
     public void onDisable() {
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        // Module disablement logic
     }
 }

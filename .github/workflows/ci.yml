@@ -1,4 +1,4 @@
-name: Build CI
+name: Build CI & Testing Matrix
 
 on:
   push:
@@ -18,8 +18,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
-    name: build
+  build-and-test:
+    name: Build & Staged Testing
     runs-on: ubuntu-latest
 
     steps:
@@ -38,11 +38,26 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build with Gradle
+      - name: Cache Minecraft Server Artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches/minecraft-servers
+          key: ${{ runner.os }}-paper-servers-${{ hashFiles('testing/src/main/resources/minecraft-matrix.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-paper-servers-
+
+      - name: 1. Unit Tests
         run: |
           chmod +x gradlew
-          ./gradlew clean build --no-daemon
+          ./gradlew test --no-daemon
 
+      - name: 2. Integration Tests
+        run: |
+          ./gradlew integrationTest --no-daemon
+
+      - name: Build Plugin Shaded JAR
+        run: |
+          ./gradlew :bootstrap:shadowJar --no-daemon
 
       - name: Verify Artifact Integrity & Plugin Metadata
         run: |
@@ -72,9 +87,26 @@ jobs:
 
           echo "Artifact integrity verification PASSED."
 
+      - name: 3. Primary Minecraft Server Smoke Test
+        run: |
+          ./gradlew minecraftTest --no-daemon
+
+      - name: 4. Version Matrix Compatibility Test
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+        run: |
+          ./gradlew compatibilityTest -DmatrixLevel=smoke --no-daemon
+
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v7
         with:
           name: KUpdater-build
           path: bootstrap/build/libs/*.jar
 
+      - name: Upload Compatibility Reports & Test Logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-and-logs
+          path: |
+            build/reports/
+            build/test-results/minecraft/

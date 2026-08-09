@@ -11,7 +11,9 @@ import io.github.kaivian.kupdater.features.mining.MiningModule;
 import io.github.kaivian.kupdater.features.progression.ProgressionModule;
 import io.github.kaivian.kupdater.features.tools.ToolsModule;
 import io.github.kaivian.kupdater.platform.common.PlatformManager;
+import io.github.kaivian.kupdater.platform.v1_13.Paper1_13Adapter;
 import io.github.kaivian.kupdater.platform.v1_21.Paper1_21Adapter;
+import io.github.kaivian.kupdater.platform.v1_8.Paper1_8Adapter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -28,8 +30,10 @@ public final class KUpdaterPlugin extends JavaPlugin {
     public void onEnable() {
         getLogger().info("Initializing KUpdater modular framework...");
 
-        // Initialize platform manager and version adapter
+        // Initialize platform manager and version adapters across support range (1.8.8 -> 26.2)
         this.platformManager = new PlatformManager(getLogger());
+        this.platformManager.registerAdapter(new Paper1_8Adapter());
+        this.platformManager.registerAdapter(new Paper1_13Adapter());
         this.platformManager.registerAdapter(new Paper1_21Adapter());
         this.platformManager.initialize(getServer().getVersion());
 
@@ -41,14 +45,14 @@ public final class KUpdaterPlugin extends JavaPlugin {
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.setup();
 
-        // Initialize module manager with persistence support
-        this.moduleManager = new ModuleManager(this, this.databaseManager);
+        // Initialize module manager with persistence and config support
+        this.moduleManager = new ModuleManager(this, this.databaseManager, this.configManager);
 
         // Register feature module skeletons
         registerFeatureModules();
 
-        // Enable registered modules
-        this.moduleManager.enableModules();
+        // Enable registered modules against current server version
+        this.moduleManager.enableModules(getServer().getVersion());
 
         getLogger().info("KUpdater startup completed successfully.");
     }
@@ -94,4 +98,3 @@ public final class KUpdaterPlugin extends JavaPlugin {
         return platformManager;
     }
 }
-

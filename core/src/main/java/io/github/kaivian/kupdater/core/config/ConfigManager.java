@@ -57,4 +57,18 @@ public class ConfigManager {
         }
         return moduleDir;
     }
+
+    /**
+     * Checks if a module is enabled in global configuration (modules.<id>.enabled).
+     * Defaults to true if not specified.
+     *
+     * @param moduleId identifier of the module
+     * @return true if enabled in config, false otherwise
+     */
+    public boolean isModuleEnabled(String moduleId) {
+        if (plugin == null || plugin.getConfig() == null) {
+            return true;
+        }
+        return plugin.getConfig().getBoolean("modules." + moduleId + ".enabled", true);
+    }
 }

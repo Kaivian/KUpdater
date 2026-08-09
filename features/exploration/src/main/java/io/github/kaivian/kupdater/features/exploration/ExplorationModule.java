@@ -1,58 +1,33 @@
 package io.github.kaivian.kupdater.features.exploration;
 
-import io.github.kaivian.kupdater.api.module.KModule;
+import io.github.kaivian.kupdater.api.module.AbstractKModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
-
-import java.util.Collections;
-import java.util.List;
+import io.github.kaivian.kupdater.api.version.MinecraftVersion;
 
 /**
- * Exploration & World module skeleton.
+ * Exploration module implementation.
+ * Supported Minecraft version range: 1.16.0 to 26.2.0.
  */
-public class ExplorationModule implements KModule {
+public class ExplorationModule extends AbstractKModule {
 
-    private boolean enabled = false;
-
-    @Override
-    public String getId() {
-        return "exploration";
-    }
-
-    @Override
-    public String getName() {
-        return "Exploration Module";
-    }
-
-    @Override
-    public String getDescription() {
-        return "World exploration and adventure enhancements.";
-    }
-
-    @Override
-    public ModuleCategory getCategory() {
-        return ModuleCategory.EXPLORATION;
-    }
-
-    @Override
-    public List<String> getSupportedMinecraftVersions() {
-        return Collections.singletonList("1.21.x");
+    public ExplorationModule() {
+        super(
+                "exploration",
+                "Exploration & Structures Module",
+                "Custom structures, biome rewards, and exploration stats.",
+                ModuleCategory.EXPLORATION,
+                MinecraftVersion.of("1.16.0"),
+                MinecraftVersion.V26_2
+        );
     }
 
     @Override
     public void onEnable() {
+        // Module enablement logic
     }
 
     @Override
     public void onDisable() {
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        // Module disablement logic
     }
 }

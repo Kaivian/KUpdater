@@ -1,58 +1,33 @@
 package io.github.kaivian.kupdater.features.combat;
 
-import io.github.kaivian.kupdater.api.module.KModule;
+import io.github.kaivian.kupdater.api.module.AbstractKModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
-
-import java.util.Collections;
-import java.util.List;
+import io.github.kaivian.kupdater.api.version.MinecraftVersion;
 
 /**
- * Combat Mechanics module skeleton.
+ * Modern Combat module implementation.
+ * Supported Minecraft version range: 1.20.0 to 26.2.0.
  */
-public class CombatModule implements KModule {
+public class CombatModule extends AbstractKModule {
 
-    private boolean enabled = false;
-
-    @Override
-    public String getId() {
-        return "combat";
-    }
-
-    @Override
-    public String getName() {
-        return "Combat Mechanics Module";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Vanilla+ combat mechanics enhancements.";
-    }
-
-    @Override
-    public ModuleCategory getCategory() {
-        return ModuleCategory.COMBAT;
-    }
-
-    @Override
-    public List<String> getSupportedMinecraftVersions() {
-        return Collections.singletonList("1.21.x");
+    public CombatModule() {
+        super(
+                "combat",
+                "Combat Mechanics Module",
+                "Combat and battle enhancements.",
+                ModuleCategory.COMBAT,
+                MinecraftVersion.of("1.20.0"),
+                MinecraftVersion.V26_2
+        );
     }
 
     @Override
     public void onEnable() {
+        // Module enablement logic
     }
 
     @Override
     public void onDisable() {
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        // Module disablement logic
     }
 }

@@ -1,58 +1,33 @@
 package io.github.kaivian.kupdater.features.economy;
 
-import io.github.kaivian.kupdater.api.module.KModule;
+import io.github.kaivian.kupdater.api.module.AbstractKModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
-
-import java.util.Collections;
-import java.util.List;
+import io.github.kaivian.kupdater.api.version.MinecraftVersion;
 
 /**
- * Economy Enhancements module skeleton.
+ * Economy module implementation.
+ * Supported Minecraft version range: 1.12.0 to 26.2.0.
  */
-public class EconomyModule implements KModule {
+public class EconomyModule extends AbstractKModule {
 
-    private boolean enabled = false;
-
-    @Override
-    public String getId() {
-        return "economy";
-    }
-
-    @Override
-    public String getName() {
-        return "Economy Module";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Economy enhancements and trade progression.";
-    }
-
-    @Override
-    public ModuleCategory getCategory() {
-        return ModuleCategory.ECONOMY;
-    }
-
-    @Override
-    public List<String> getSupportedMinecraftVersions() {
-        return Collections.singletonList("1.21.x");
+    public EconomyModule() {
+        super(
+                "economy",
+                "Economy & Shops Module",
+                "Currency, trade, and shop features.",
+                ModuleCategory.ECONOMY,
+                MinecraftVersion.of("1.12.0"),
+                MinecraftVersion.V26_2
+        );
     }
 
     @Override
     public void onEnable() {
+        // Module enablement logic
     }
 
     @Override
     public void onDisable() {
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        // Module disablement logic
     }
 }

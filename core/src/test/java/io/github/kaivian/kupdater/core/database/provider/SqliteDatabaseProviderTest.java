@@ -2,6 +2,7 @@ package io.github.kaivian.kupdater.core.database.provider;
 
 import io.github.kaivian.kupdater.api.database.DatabaseConfiguration;
 import io.github.kaivian.kupdater.api.database.DatabaseType;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 class SqliteDatabaseProviderTest {
 
     @Test
