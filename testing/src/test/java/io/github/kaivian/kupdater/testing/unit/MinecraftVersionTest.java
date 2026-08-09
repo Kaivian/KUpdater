@@ -136,7 +136,7 @@ class MinecraftVersionTest {
         assertEquals("1.21.4", matrix.getLatestSupportedVersion());
 
         List<String> smokeVersions = matrix.resolveLevel("smoke");
-        assertEquals(3, smokeVersions.size());
+        assertEquals(2, smokeVersions.size());
         assertTrue(smokeVersions.contains("1.8.8"));
         assertTrue(smokeVersions.contains("1.21.4"));
     }

@@ -122,7 +122,7 @@ public class MigrationRunner {
     private Set<Integer> getAppliedVersions(Connection conn) throws SQLException {
         Set<Integer> versions = new HashSet<>();
         String sql = "SELECT " + dialect.quoteIdentifier("version") + " FROM " + dialect.quoteIdentifier(HISTORY_TABLE)
-                + " WHERE " + dialect.quoteIdentifier("success") + " = 1 OR " + dialect.quoteIdentifier("success") + " = true";
+                + " WHERE " + dialect.quoteIdentifier("success") + " = 1";
 
         try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {

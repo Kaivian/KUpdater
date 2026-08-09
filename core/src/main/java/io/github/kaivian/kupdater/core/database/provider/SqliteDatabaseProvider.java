@@ -57,6 +57,8 @@ public class SqliteDatabaseProvider extends AbstractHikariDatabaseProvider {
 
         // Enable WAL mode and foreign keys via connection init sql
         config.setConnectionInitSql("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;");
+        // Bypass connection.isValid() for legacy SQLite drivers (e.g. Paper 1.8.8)
+        config.setConnectionTestQuery("SELECT 1");
 
         return config;
     }

@@ -23,6 +23,7 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+    dependsOn(":bootstrap:shadowJar")
     useJUnitPlatform()
     jvmArgs("-Dnet.bytebuddy.experimental=true")
 }

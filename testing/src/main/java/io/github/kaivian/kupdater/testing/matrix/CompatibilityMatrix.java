@@ -88,7 +88,11 @@ public final class CompatibilityMatrix {
             case "full":
                 return Collections.singletonList(primaryVersion);
             case "smoke":
-                return Arrays.asList(getOldestSupportedVersion(), primaryVersion, getLatestSupportedVersion());
+                List<String> smokeList = new ArrayList<>();
+                smokeList.add(getOldestSupportedVersion());
+                if (!smokeList.contains(primaryVersion)) smokeList.add(primaryVersion);
+                if (!smokeList.contains(getLatestSupportedVersion())) smokeList.add(getLatestSupportedVersion());
+                return smokeList;
             case "boundary":
             case "all":
             case "compatibility":
