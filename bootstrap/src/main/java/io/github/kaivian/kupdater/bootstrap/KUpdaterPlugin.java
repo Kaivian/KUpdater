@@ -1,6 +1,7 @@
 package io.github.kaivian.kupdater.bootstrap;
 
 import io.github.kaivian.kupdater.core.config.ConfigManager;
+import io.github.kaivian.kupdater.core.database.DatabaseManager;
 import io.github.kaivian.kupdater.core.module.ModuleManager;
 import io.github.kaivian.kupdater.features.combat.CombatModule;
 import io.github.kaivian.kupdater.features.economy.EconomyModule;
@@ -10,7 +11,9 @@ import io.github.kaivian.kupdater.features.mining.MiningModule;
 import io.github.kaivian.kupdater.features.progression.ProgressionModule;
 import io.github.kaivian.kupdater.features.tools.ToolsModule;
 import io.github.kaivian.kupdater.platform.common.PlatformManager;
+import io.github.kaivian.kupdater.platform.v1_13.Paper1_13Adapter;
 import io.github.kaivian.kupdater.platform.v1_21.Paper1_21Adapter;
+import io.github.kaivian.kupdater.platform.v1_8.Paper1_8Adapter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -19,6 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class KUpdaterPlugin extends JavaPlugin {
 
     private ConfigManager configManager;
+    private DatabaseManager databaseManager;
     private ModuleManager moduleManager;
     private PlatformManager platformManager;
 
@@ -26,24 +30,31 @@ public final class KUpdaterPlugin extends JavaPlugin {
     public void onEnable() {
         getLogger().info("Initializing KUpdater modular framework...");
 
-        // Initialize platform manager and version adapter
+        // Initialize platform manager and version adapters across support range (1.8.8 -> 26.2)
         this.platformManager = new PlatformManager(getLogger());
+        this.platformManager.registerAdapter(new Paper1_8Adapter());
+        this.platformManager.registerAdapter(new Paper1_13Adapter());
         this.platformManager.registerAdapter(new Paper1_21Adapter());
         this.platformManager.initialize(getServer().getVersion());
 
-        // Initialize core systems
+        // Initialize core config system
         this.configManager = new ConfigManager(this);
         this.configManager.setup();
 
-        this.moduleManager = new ModuleManager(this);
+        // Initialize database persistence manager
+        this.databaseManager = new DatabaseManager(this);
+        this.databaseManager.setup();
+
+        // Initialize module manager with persistence and config support
+        this.moduleManager = new ModuleManager(this, this.databaseManager, this.configManager);
 
         // Register feature module skeletons
         registerFeatureModules();
 
-        // Enable registered modules
-        this.moduleManager.enableModules();
+        // Enable registered modules against current server version
+        this.moduleManager.enableModules(getServer().getVersion());
 
-        getLogger().info("KUpdater successfully enabled with modular architecture.");
+        getLogger().info("KUpdater startup completed successfully.");
     }
 
     @Override
@@ -54,7 +65,11 @@ public final class KUpdaterPlugin extends JavaPlugin {
             this.moduleManager.disableModules();
         }
 
-        getLogger().info("KUpdater successfully disabled.");
+        if (this.databaseManager != null) {
+            this.databaseManager.shutdown();
+        }
+
+        getLogger().info("KUpdater shutdown completed.");
     }
 
     private void registerFeatureModules() {
@@ -69,6 +84,10 @@ public final class KUpdaterPlugin extends JavaPlugin {
 
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 
     public ModuleManager getModuleManager() {

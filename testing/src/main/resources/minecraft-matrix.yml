@@ -1,0 +1,15 @@
+minecraft:
+  compatibility:
+    enabled: true
+    primary-version: "1.21.4"
+    versions:
+      - "1.8.8"
+      - "1.12.2"
+      - "1.16.5"
+      - "1.20.4"
+      - "1.21.4"
+
+  test:
+    startup-timeout-seconds: 120
+    shutdown-timeout-seconds: 30
+    test-timeout-seconds: 180

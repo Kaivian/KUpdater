@@ -1,0 +1,126 @@
+# ==============================================================================
+#                      KUpdater Configuration File
+# ==============================================================================
+# Official Documentation & Module & Persistence Configuration
+# ==============================================================================
+
+# ==============================================================================
+# Gameplay Modules Enable/Disable Configuration
+# ==============================================================================
+# Enable or disable individual gameplay modules.
+# When a module is set to false, it will be skipped during plugin startup.
+# ==============================================================================
+modules:
+  # Tools Progression Module (Supported MC Versions: 1.12 -> 26.2)
+  tools:
+    enabled: true
+
+  # Player Progression Module (Supported MC Versions: 1.8.8 -> 26.2)
+  progression:
+    enabled: true
+
+  # Combat Mechanics Module (Supported MC Versions: 1.20 -> 26.2)
+  combat:
+    enabled: true
+
+  # Farming Enhancements Module (Supported MC Versions: 1.8.8 -> 26.2)
+  farming:
+    enabled: true
+
+  # Mining & Ores Module (Supported MC Versions: 1.8.8 -> 26.2)
+  mining:
+    enabled: true
+
+  # Economy & Shops Module (Supported MC Versions: 1.8.8 -> 26.2)
+  economy:
+    enabled: true
+
+  # Exploration & Structures Module (Supported MC Versions: 1.16.5 -> 26.2)
+  exploration:
+    enabled: true
+
+# ==============================================================================
+# Database Persistence Configuration
+# ==============================================================================
+database:
+  # Whether database persistence is enabled.
+  # When set to false, KUpdater will NOT attempt to connect to any external database
+  # or open SQLite database files. The plugin will still start successfully.
+  # Default: false
+  enabled: false
+
+  # Selected database engine type.
+  # Supported values:
+  #   - sqlite      (Local SQLite file database)
+  #   - mysql       (MySQL database server)
+  #   - postgresql  (PostgreSQL database server)
+  #   - mariadb     (MariaDB database server)
+  #   - sql-server  (Microsoft SQL Server database)
+  # Default: sqlite
+  type: sqlite
+
+  # SQLite local database configuration (used when database.type = sqlite)
+  sqlite:
+    # File path relative to the plugins/KUpdater/ directory, or absolute file path.
+    # Parent directories are created automatically if they do not exist.
+    # Default: data/kupdater.db
+    file: data/kupdater.db
+
+  # MySQL database configuration (used when database.type = mysql)
+  mysql:
+    host: localhost
+    port: 3306
+    database: kupdater
+    username: root
+    password: ""
+    ssl: false
+
+  # PostgreSQL database configuration (used when database.type = postgresql)
+  postgresql:
+    host: localhost
+    port: 5432
+    database: kupdater
+    username: postgres
+    password: ""
+    ssl: false
+
+  # MariaDB database configuration (used when database.type = mariadb)
+  mariadb:
+    host: localhost
+    port: 3306
+    database: kupdater
+    username: root
+    password: ""
+    ssl: false
+
+  # Microsoft SQL Server database configuration (used when database.type = sql-server)
+  sql-server:
+    host: localhost
+    port: 1433
+    database: kupdater
+    username: sa
+    password: ""
+    encrypt: false
+    trust-server-certificate: true
+
+  # HikariCP Connection Pool settings (used for all database engines)
+  pool:
+    # Maximum size of the connection pool.
+    # Default: 10
+    maximum-size: 10
+
+    # Minimum number of idle connections maintained in the pool.
+    # Default: 2
+    minimum-idle: 2
+
+    # Maximum time in milliseconds to wait for a connection from the pool.
+    # Default: 10000 (10 seconds)
+    connection-timeout: 10000
+
+    # Maximum time in milliseconds a connection is allowed to sit idle.
+    # Default: 600000 (10 minutes)
+    idle-timeout: 600000
+
+    # Maximum lifetime in milliseconds of a connection in the pool.
+    # Default: 1800000 (30 minutes)
+    max-lifetime: 1800000

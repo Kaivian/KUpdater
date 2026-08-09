@@ -7,6 +7,8 @@ dependencies {
     implementation(project(":api"))
     implementation(project(":core"))
     implementation(project(":platform:common"))
+    implementation(project(":platform:v1_8"))
+    implementation(project(":platform:v1_13"))
     implementation(project(":platform:v1_21"))
     implementation(project(":features:tools"))
     implementation(project(":features:progression"))
@@ -36,7 +38,7 @@ tasks {
 
     processResources {
         val props = mapOf("version" to project.version, "description" to project.description)
-        filesMatching("plugin.yml") {
+        filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
             expand(props)
         }
     }

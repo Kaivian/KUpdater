@@ -1,60 +1,33 @@
 package io.github.kaivian.kupdater.features.tools;
 
-import io.github.kaivian.kupdater.api.module.KModule;
+import io.github.kaivian.kupdater.api.module.AbstractKModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
-
-import java.util.Collections;
-import java.util.List;
+import io.github.kaivian.kupdater.api.version.MinecraftVersion;
 
 /**
- * Tools & Equipment Progression module skeleton.
+ * Tools & Equipment Progression module implementation.
+ * Supported Minecraft version range: 1.12.0 to 26.2.0.
  */
-public class ToolsModule implements KModule {
+public class ToolsModule extends AbstractKModule {
 
-    private boolean enabled = false;
-
-    @Override
-    public String getId() {
-        return "tools";
-    }
-
-    @Override
-    public String getName() {
-        return "Tools Progression Module";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Tools and equipment progression enhancements.";
-    }
-
-    @Override
-    public ModuleCategory getCategory() {
-        return ModuleCategory.TOOLS;
-    }
-
-    @Override
-    public List<String> getSupportedMinecraftVersions() {
-        return Collections.singletonList("1.21.x");
+    public ToolsModule() {
+        super(
+                "tools",
+                "Tools Progression Module",
+                "Tools and equipment progression enhancements.",
+                ModuleCategory.TOOLS,
+                MinecraftVersion.of("1.12.0"),
+                MinecraftVersion.V26_2
+        );
     }
 
     @Override
     public void onEnable() {
-        // Module enablement architecture hook
+        // Module enablement logic
     }
 
     @Override
     public void onDisable() {
-        // Module disablement architecture hook
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        // Module disablement logic
     }
 }

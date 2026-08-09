@@ -4,7 +4,15 @@ prefix: KUpdater
 version: '${version}'
 
 main: io.github.kaivian.kupdater.bootstrap.KUpdaterPlugin
-api-version: '26.2'
+api-version: '1.21'
 load: STARTUP
 
 authors: [ Kaivian ]
+
+libraries:
+  - com.zaxxer:HikariCP:6.2.1
+  - org.xerial:sqlite-jdbc:3.49.1.0
+  - com.mysql:mysql-connector-j:9.2.0
+  - org.postgresql:postgresql:42.7.5
+  - org.mariadb.jdbc:mariadb-java-client:3.5.2
+  - com.microsoft.sqlserver:mssql-jdbc:12.8.1.jre11
