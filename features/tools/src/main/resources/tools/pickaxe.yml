@@ -1,0 +1,333 @@
+# ==============================================================================
+#                      KUpdater Pickaxe Module Configuration
+# ==============================================================================
+# Location: plugins/KUpdater/modules/tools/pickaxe.yml
+# ==============================================================================
+
+# Messages shown to players upon actions and usage restriction
+messages:
+  deny-ownership: "&cThis Pickaxe does not belong to you."
+  tool-broken: "&cThis Pickaxe is broken and cannot be used."
+  tool-invalid: "&cThis Pickaxe carries an unknown tool ID and cannot be used."
+  tool-lost: "&cThis Pickaxe is lost and cannot be used."
+  already-own-pickaxe: "&c★ You already own a Pickaxe! If you lost your pickaxe, use &e/kup recover&c to claim it back."
+  first-pickaxe-crafted: "&a★ Congratulations! You successfully crafted your first Wooden Pickaxe. Mine blocks to gain XP and upgrade your tool!"
+  vanilla-crafting-disabled: "&c★ Vanilla pickaxe crafting is disabled! Upgrade your Wooden Pickaxe through tier progression."
+  not-max-level-upgrade: "&cThis Pickaxe is not at max level or max XP for tier upgrade."
+  not-max-level-upgrade-smithing: "&cThis Diamond Pickaxe is not at max level or max XP for Netherite upgrade."
+  tier-upgraded: "&a★ Upgraded Pickaxe Tier to &e%tier% Level %level%&a!"
+  level-upgraded: "&a▲ Your Pickaxe upgraded to &e%tier% Level %level%&a!"
+  recover-no-pickaxe: "&c★ You do not own a Pickaxe yet! Craft a Wooden Pickaxe for the first time."
+  recover-already-in-inventory: "&c★ Your Pickaxe is already in your inventory!"
+  recover-success: "&a★ Recovery successful! You received your &e%tier% Level %level%&a."
+  reload-success: "&a★ [KUpdater] Configuration reloaded successfully in %duration%ms!"
+  no-permission: "&cYou do not have permission to execute this command."
+
+# Legacy message fallback keys (backward compatibility)
+deny-message: "This Pickaxe does not belong to you."
+broken-message: "This Pickaxe is broken and cannot be used."
+invalid-message: "This Pickaxe carries an unknown tool ID and cannot be used."
+
+# Allow players to accumulate XP into a pool when reaching max level of their tier
+# Stored XP is automatically applied upon upgrading to the next tier.
+allow-overflow-xp-pool: true
+max-overflow-xp-pool: 10000
+
+# Maximum visible characters per line before auto word-wrapping lore text (0 to disable)
+lore-max-line-length: 33
+
+# Custom Item Display Names
+display-name: "&f%material% Pickaxe &8(Lvl %level%)"
+broken-display-name: "&cBroken %material% Pickaxe"
+lost-display-name: "&e%material% Pickaxe (Lost)"
+
+# Custom Lore Formatting
+# Supported Placeholders:
+# %material%, %tier%, %next_tier%, %level%, %next_level%, %xp%, %max_xp%, %xp_formatted%, %max_xp_formatted%,
+# %percentage%, %progress_bar%, %speed%, %mining_speed%, %current%, %durability%,
+# %max%, %max_durability%, %state%, %overflow_xp%, %xp_pool%
+lore:
+  - ""
+  - "&7Mining Speed: &a%speed%"
+  - "&7Durability: &f%current%/%max%"
+  - ""
+  - "&7Progress to Level %next_level%: &a%percentage%%"
+  - "%progress_bar%&r &a%xp%&7/&a%max_xp% &7XP"
+
+# Progress Bar Settings
+# Uses spaces " " with bold (&l) and strikethrough (&m) for thick continuous line progress bars
+progress-bar:
+  symbol: " "
+  length: 22
+  completed-color: "&a&l&m"
+  remaining-color: "&8&l&m"
+
+# Upgrade instruction guide appended to item lore / chat upon reaching max level of current tier
+max-level-guide:
+  crafting: "&e⚡ Reached max level! Upgrade with &f%upgrade_amount% %upgrade_item%&e in Crafting Table."
+  smithing: "&e⚡ Reached max level! Upgrade with &f%upgrade_amount% %upgrade_item%&e in Smithing Table."
+
+# Text shown when reaching maximum level with no further tier upgrades available
+max-level-reached-text: "&a&l✦ MAX LEVEL REACHED ✦"
+
+# Text shown for stored/overflow XP pool display
+# Supported Placeholders: %stored_xp%, %overflow_xp%, %xp_pool%
+stored-xp-text: "&7Stored XP: &e%stored_xp%"
+
+# List of blocks that are considered Pickaxe blocks for Mining Speed boost application.
+# Mining these blocks with a Pickaxe activates the Mining Speed bonus.
+mineable-blocks:
+  - "STONE"
+  - "COBBLESTONE"
+  - "MOSSY_COBBLESTONE"
+  - "GRANITE"
+  - "DIORITE"
+  - "ANDESITE"
+  - "DEEPSLATE"
+  - "COAL_ORE"
+  - "DEEPSLATE_COAL_ORE"
+  - "COPPER_ORE"
+  - "DEEPSLATE_COPPER_ORE"
+  - "IRON_ORE"
+  - "DEEPSLATE_IRON_ORE"
+  - "GOLD_ORE"
+  - "DEEPSLATE_GOLD_ORE"
+  - "REDSTONE_ORE"
+  - "DEEPSLATE_REDSTONE_ORE"
+  - "LAPIS_ORE"
+  - "DEEPSLATE_LAPIS_ORE"
+  - "DIAMOND_ORE"
+  - "DEEPSLATE_DIAMOND_ORE"
+  - "EMERALD_ORE"
+  - "DEEPSLATE_EMERALD_ORE"
+  - "NETHER_QUARTZ_ORE"
+  - "NETHER_GOLD_ORE"
+  - "ANCIENT_DEBRIS"
+  - "OBSIDIAN"
+  - "NETHERRACK"
+  - "BASALT"
+  - "BLACKSTONE"
+  - "TERRACOTTA"
+  - "CONCRETE"
+
+# Block XP reward values granted upon mining with a Pickaxe
+block-xp:
+  default: 1
+  STONE: 2
+  COAL_ORE: 3
+  DEEPSLATE_COAL_ORE: 3
+  COPPER_ORE: 3
+  DEEPSLATE_COPPER_ORE: 3
+  IRON_ORE: 5
+  DEEPSLATE_IRON_ORE: 5
+  GOLD_ORE: 8
+  DEEPSLATE_GOLD_ORE: 8
+  REDSTONE_ORE: 6
+  DEEPSLATE_REDSTONE_ORE: 6
+  LAPIS_ORE: 6
+  DEEPSLATE_LAPIS_ORE: 6
+  DIAMOND_ORE: 15
+  DEEPSLATE_DIAMOND_ORE: 15
+  EMERALD_ORE: 20
+  DEEPSLATE_EMERALD_ORE: 20
+  NETHER_QUARTZ_ORE: 4
+  NETHER_GOLD_ORE: 4
+  ANCIENT_DEBRIS: 25
+  OBSIDIAN: 10
+
+# Tier progression order: WOODEN -> STONE -> COPPER -> IRON -> GOLD -> DIAMOND -> NETHERITE
+# Reaching max level of a tier allows upgrading into Level 1 of the next tier via Crafting Table.
+tiers:
+  WOODEN:
+    display-name: "Wooden Pickaxe"
+    item-material: "WOODEN_PICKAXE"
+    max-level: 3
+    next-tier: "STONE"
+    upgrade-recipe:
+      material: "STONE"
+      amount: 8
+    levels:
+      1:
+        mining-speed: 2.00
+        durability: 59
+        required-xp: 50
+      2:
+        mining-speed: 2.60
+        durability: 75
+        required-xp: 100
+      3:
+        mining-speed: 3.20
+        durability: 95
+        required-xp: 150
+
+  STONE:
+    display-name: "Stone Pickaxe"
+    item-material: "STONE_PICKAXE"
+    max-level: 3
+    next-tier: "COPPER"
+    upgrade-recipe:
+      material: "COPPER_INGOT"
+      amount: 8
+    levels:
+      1:
+        mining-speed: 4.00
+        durability: 131
+        required-xp: 200
+      2:
+        mining-speed: 4.30
+        durability: 160
+        required-xp: 300
+      3:
+        mining-speed: 4.60
+        durability: 190
+        required-xp: 450
+
+  COPPER:
+    display-name: "Copper Pickaxe"
+    item-material: "COPPER_PICKAXE"
+    custom-model-data: 0
+    max-level: 3
+    next-tier: "IRON"
+    upgrade-recipe:
+      material: "IRON_INGOT"
+      amount: 8
+    levels:
+      1:
+        mining-speed: 5.00
+        durability: 200
+        required-xp: 500
+      2:
+        mining-speed: 5.30
+        durability: 230
+        required-xp: 650
+      3:
+        mining-speed: 5.60
+        durability: 260
+        required-xp: 800
+
+  IRON:
+    display-name: "Iron Pickaxe"
+    item-material: "IRON_PICKAXE"
+    max-level: 4
+    next-tier: "GOLD"
+    upgrade-recipe:
+      material: "GOLD_INGOT"
+      amount: 8
+    levels:
+      1:
+        mining-speed: 6.00
+        durability: 250
+        required-xp: 900
+      2:
+        mining-speed: 6.25
+        durability: 290
+        required-xp: 1100
+      3:
+        mining-speed: 6.50
+        durability: 330
+        required-xp: 1350
+      4:
+        mining-speed: 6.75
+        durability: 370
+        required-xp: 1650
+
+  GOLD:
+    display-name: "Golden Pickaxe"
+    item-material: "GOLDEN_PICKAXE"
+    max-level: 4
+    next-tier: "DIAMOND"
+    upgrade-recipe:
+      material: "DIAMOND"
+      amount: 8
+    levels:
+      1:
+        mining-speed: 12.00
+        durability: 32
+        required-xp: 1800
+      2:
+        mining-speed: 12.50
+        durability: 50
+        required-xp: 2200
+      3:
+        mining-speed: 13.00
+        durability: 75
+        required-xp: 2700
+      4:
+        mining-speed: 13.50
+        durability: 100
+        required-xp: 3300
+
+  DIAMOND:
+    display-name: "Diamond Pickaxe"
+    item-material: "DIAMOND_PICKAXE"
+    max-level: 5
+    next-tier: "NETHERITE"
+    # Upgraded via Smithing Table with Netherite Ingot
+    levels:
+      1:
+        mining-speed: 8.00
+        durability: 1561
+        required-xp: 3800
+      2:
+        mining-speed: 8.15
+        durability: 1750
+        required-xp: 4500
+      3:
+        mining-speed: 8.30
+        durability: 1950
+        required-xp: 5300
+      4:
+        mining-speed: 8.45
+        durability: 2150
+        required-xp: 6200
+      5:
+        mining-speed: 8.60
+        durability: 2400
+        required-xp: 7200
+
+  NETHERITE:
+    display-name: "Netherite Pickaxe"
+    item-material: "NETHERITE_PICKAXE"
+    max-level: 10
+    next-tier: null
+    levels:
+      1:
+        mining-speed: 9.00
+        durability: 2031
+        required-xp: 8000
+      2:
+        mining-speed: 9.30
+        durability: 2300
+        required-xp: 9500
+      3:
+        mining-speed: 9.60
+        durability: 2600
+        required-xp: 11000
+      4:
+        mining-speed: 9.90
+        durability: 3000
+        required-xp: 13000
+      5:
+        mining-speed: 10.20
+        durability: 3400
+        required-xp: 15500
+      6:
+        mining-speed: 10.50
+        durability: 3900
+        required-xp: 18500
+      7:
+        mining-speed: 10.80
+        durability: 4500
+        required-xp: 22000
+      8:
+        mining-speed: 11.10
+        durability: 5200
+        required-xp: 26000
+      9:
+        mining-speed: 11.50
+        durability: 6000
+        required-xp: 31000
+      10:
+        mining-speed: 11.80
+        durability: 7000
+        required-xp: 37000

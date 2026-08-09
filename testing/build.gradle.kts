@@ -15,9 +15,14 @@ dependencies {
     implementation(libs.paper.api)
     implementation(libs.junit.jupiter)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.hikaricp)
+    testImplementation(libs.sqlite.jdbc)
+    testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
     testRuntimeOnly(libs.junit.launcher)
 }
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    jvmArgs("-Dnet.bytebuddy.experimental=true")
 }

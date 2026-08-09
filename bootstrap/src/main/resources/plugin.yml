@@ -5,7 +5,6 @@ version: '${version}'
 
 main: io.github.kaivian.kupdater.bootstrap.KUpdaterPlugin
 api-version: '1.21'
-load: STARTUP
 
 authors: [ Kaivian ]
 

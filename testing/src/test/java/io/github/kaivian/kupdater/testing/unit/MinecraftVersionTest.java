@@ -42,6 +42,16 @@ class MinecraftVersionTest {
         assertEquals(26, v3.getMajor());
         assertEquals(2, v3.getMinor());
         assertEquals(0, v3.getPatch());
+
+        MinecraftVersion vPaper1 = MinecraftVersion.of("1.21.4-R0.1-SNAPSHOT");
+        assertEquals(1, vPaper1.getMajor());
+        assertEquals(21, vPaper1.getMinor());
+        assertEquals(4, vPaper1.getPatch());
+
+        MinecraftVersion vPaper2 = MinecraftVersion.of("git-Paper-448 (MC: 1.21.4)");
+        assertEquals(1, vPaper2.getMajor());
+        assertEquals(21, vPaper2.getMinor());
+        assertEquals(4, vPaper2.getPatch());
     }
 
     @Test

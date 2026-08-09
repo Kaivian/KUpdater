@@ -1,0 +1,10 @@
+# ==============================================================================
+#                      KUpdater Tools Shared Configuration
+# ==============================================================================
+# Location: plugins/KUpdater/modules/tools/tool-config.yml
+# ==============================================================================
+
+# Shared configuration options across all equipment/tool types
+general:
+  enable-durability-protection: true
+  send-broken-notifications: true

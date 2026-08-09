@@ -1,6 +1,6 @@
 dependencies {
     api(project(":api"))
-    compileOnly(libs.hikaricp)
+    implementation(libs.hikaricp)
     compileOnly(libs.sqlite.jdbc)
     compileOnly(libs.mysql.connector)
     compileOnly(libs.postgresql.driver)

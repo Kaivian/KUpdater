@@ -39,28 +39,20 @@ public final class MinecraftVersion implements Comparable<MinecraftVersion> {
         }
 
         String cleaned = versionStr.trim();
-        // Remove common paper/spigot prefixes/suffixes if present
-        if (cleaned.contains("-")) {
-            cleaned = cleaned.substring(0, cleaned.indexOf('-'));
-        }
-
-        String[] parts = cleaned.split("\\.");
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)\\.(\\d+)(?:\\.(\\d+))?").matcher(cleaned);
         int major = 0;
         int minor = 0;
         int patch = 0;
 
-        try {
-            if (parts.length > 0 && !parts[0].isEmpty()) {
-                major = Integer.parseInt(parts[0].replaceAll("[^0-9]", ""));
+        if (matcher.find()) {
+            try {
+                major = Integer.parseInt(matcher.group(1));
+                minor = Integer.parseInt(matcher.group(2));
+                if (matcher.group(3) != null && !matcher.group(3).isEmpty()) {
+                    patch = Integer.parseInt(matcher.group(3));
+                }
+            } catch (NumberFormatException ignored) {
             }
-            if (parts.length > 1 && !parts[1].isEmpty()) {
-                minor = Integer.parseInt(parts[1].replaceAll("[^0-9]", ""));
-            }
-            if (parts.length > 2 && !parts[2].isEmpty()) {
-                patch = Integer.parseInt(parts[2].replaceAll("[^0-9]", ""));
-            }
-        } catch (NumberFormatException e) {
-            // Keep parsed components as 0 for non-numeric tokens
         }
 
         return new MinecraftVersion(versionStr, major, minor, patch);
