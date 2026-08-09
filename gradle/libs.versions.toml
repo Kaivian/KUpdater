@@ -4,13 +4,14 @@ minecraft = "26.2"
 junit = "5.11.4"
 junit-launcher = "1.11.4"
 run-task = "3.0.2"
-shadow = "8.3.6"
+shadow = "9.6.1"
 hikaricp = "6.2.1"
 sqlite-jdbc = "3.49.1.0"
 mysql-connector = "9.2.0"
 postgresql-driver = "42.7.5"
 mariadb-driver = "3.5.2"
 mssql-driver = "12.8.1.jre11"
+
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
