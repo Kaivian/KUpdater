@@ -12,6 +12,8 @@ import io.github.kaivian.kupdater.core.database.migration.MigrationRunner;
 import io.github.kaivian.kupdater.core.database.migration.V1__InitialSchemaMigration;
 import io.github.kaivian.kupdater.core.database.migration.V2__CreateToolProgressionSchemaMigration;
 import io.github.kaivian.kupdater.core.database.migration.V3__AddMaterialToToolProgressionSchemaMigration;
+import io.github.kaivian.kupdater.core.database.migration.V4__AddXpToToolProgressionSchemaMigration;
+import io.github.kaivian.kupdater.core.database.migration.V5__AddOverflowXpToToolProgressionSchemaMigration;
 import io.github.kaivian.kupdater.core.database.provider.SqliteDatabaseProvider;
 import io.github.kaivian.kupdater.features.tools.common.repository.JdbcToolRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -58,6 +60,8 @@ class ToolRepositoryPersistenceTest {
         runner.registerMigration(new V1__InitialSchemaMigration());
         runner.registerMigration(new V2__CreateToolProgressionSchemaMigration());
         runner.registerMigration(new V3__AddMaterialToToolProgressionSchemaMigration());
+        runner.registerMigration(new V4__AddXpToToolProgressionSchemaMigration());
+        runner.registerMigration(new V5__AddOverflowXpToToolProgressionSchemaMigration());
         runner.runMigrations();
 
         executor = new AsyncPersistenceExecutor(logger, 2);
