@@ -53,9 +53,13 @@ class ModuleManagerIntegrationTest {
     @Test
     @DisplayName("Should enable all compatible modules on Minecraft 1.21.4")
     void testVersionRangeFilteringOn1_21_4() {
+        io.github.kaivian.kupdater.core.database.DatabaseManager dbManager = org.mockito.Mockito.mock(io.github.kaivian.kupdater.core.database.DatabaseManager.class);
+        org.mockito.Mockito.when(dbManager.isAvailable()).thenReturn(true);
+        moduleManager = new ModuleManager(null, dbManager, null);
+
         moduleManager.registerModule(new FarmingModule());
         moduleManager.registerModule(new MiningModule());
-        moduleManager.registerModule(new ToolsModule());
+        moduleManager.registerModule(new ToolsModule(null, dbManager, null));
         moduleManager.registerModule(new ProgressionModule());
         moduleManager.registerModule(new CombatModule());
         moduleManager.registerModule(new ExplorationModule());

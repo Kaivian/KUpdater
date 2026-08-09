@@ -54,7 +54,46 @@ public final class KUpdaterPlugin extends JavaPlugin {
         // Enable registered modules against current server version
         this.moduleManager.enableModules(getServer().getVersion());
 
+        // Register plugin commands
+        registerCommands();
+
         getLogger().info("KUpdater startup completed successfully.");
+    }
+
+    private void registerCommands() {
+        try {
+            io.github.kaivian.kupdater.bootstrap.command.KUpdaterCommand cmdHandler =
+                    new io.github.kaivian.kupdater.bootstrap.command.KUpdaterCommand(this);
+
+            org.bukkit.command.Command command = new org.bukkit.command.Command("kupdater", "Main administrative command for KUpdater", "/kupdater reload", java.util.Arrays.asList("kup")) {
+                @Override
+                public boolean execute(org.bukkit.command.CommandSender sender, String commandLabel, String[] args) {
+                    return cmdHandler.onCommand(sender, this, commandLabel, args);
+                }
+
+                @Override
+                public java.util.List<String> tabComplete(org.bukkit.command.CommandSender sender, String alias, String[] args) throws IllegalArgumentException {
+                    return cmdHandler.onTabComplete(sender, this, alias, args);
+                }
+            };
+            command.setPermission("kupdater.admin");
+
+            org.bukkit.command.CommandMap commandMap = null;
+            try {
+                java.lang.reflect.Method getCommandMapMethod = getServer().getClass().getMethod("getCommandMap");
+                commandMap = (org.bukkit.command.CommandMap) getCommandMapMethod.invoke(getServer());
+            } catch (Throwable t) {
+                java.lang.reflect.Field field = getServer().getClass().getDeclaredField("commandMap");
+                field.setAccessible(true);
+                commandMap = (org.bukkit.command.CommandMap) field.get(getServer());
+            }
+
+            if (commandMap != null) {
+                commandMap.register("kupdater", command);
+            }
+        } catch (Throwable t) {
+            getLogger().warning("Could not register /kupdater command: " + t.getMessage());
+        }
     }
 
     @Override
@@ -73,7 +112,7 @@ public final class KUpdaterPlugin extends JavaPlugin {
     }
 
     private void registerFeatureModules() {
-        moduleManager.registerModule(new ToolsModule());
+        moduleManager.registerModule(new ToolsModule(this, this.databaseManager, this.configManager));
         moduleManager.registerModule(new ProgressionModule());
         moduleManager.registerModule(new CombatModule());
         moduleManager.registerModule(new FarmingModule());

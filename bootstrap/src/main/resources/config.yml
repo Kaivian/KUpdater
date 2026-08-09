@@ -1,17 +1,18 @@
 # ==============================================================================
-#                      KUpdater Configuration File
+#                      KUpdater Main Configuration File
 # ==============================================================================
-# Official Documentation & Module & Persistence Configuration
+# Official Core Plugin & Database Persistence Configuration
+# Dedicated module configurations are located in: plugins/KUpdater/modules/
 # ==============================================================================
 
 # ==============================================================================
 # Gameplay Modules Enable/Disable Configuration
 # ==============================================================================
 # Enable or disable individual gameplay modules.
-# When a module is set to false, it will be skipped during plugin startup.
+# Individual module settings are stored in plugins/KUpdater/modules/<module_name>.yml
 # ==============================================================================
 modules:
-  # Tools Progression Module (Supported MC Versions: 1.12 -> 26.2)
+  # Tools Progression Module (Config: plugins/KUpdater/modules/tools.yml)
   tools:
     enabled: true
 
@@ -44,10 +45,9 @@ modules:
 # ==============================================================================
 database:
   # Whether database persistence is enabled.
-  # When set to false, KUpdater will NOT attempt to connect to any external database
-  # or open SQLite database files. The plugin will still start successfully.
-  # Default: false
-  enabled: false
+  # When set to true, KUpdater will connect to the configured database engine.
+  # Default: true (SQLite enabled by default for out-of-the-box persistence)
+  enabled: true
 
   # Selected database engine type.
   # Supported values:

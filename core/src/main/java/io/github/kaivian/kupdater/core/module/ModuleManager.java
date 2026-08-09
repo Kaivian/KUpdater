@@ -72,7 +72,7 @@ public class ModuleManager {
      * Enables all registered modules using the default running Bukkit server version.
      */
     public void enableModules() {
-        String serverVersion = plugin != null && plugin.getServer() != null ? plugin.getServer().getVersion() : "26.2.0";
+        String serverVersion = plugin != null && plugin.getServer() != null ? plugin.getServer().getBukkitVersion() : "26.2.0";
         enableModules(serverVersion);
     }
 

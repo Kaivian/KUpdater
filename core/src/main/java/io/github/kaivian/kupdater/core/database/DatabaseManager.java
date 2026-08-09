@@ -16,6 +16,7 @@ import io.github.kaivian.kupdater.core.database.dialect.SqliteDialect;
 import io.github.kaivian.kupdater.core.database.execution.AsyncPersistenceExecutor;
 import io.github.kaivian.kupdater.core.database.migration.MigrationRunner;
 import io.github.kaivian.kupdater.core.database.migration.V1__InitialSchemaMigration;
+import io.github.kaivian.kupdater.core.database.migration.V2__CreateToolProgressionSchemaMigration;
 
 import io.github.kaivian.kupdater.core.database.provider.MariaDbDatabaseProvider;
 import io.github.kaivian.kupdater.core.database.provider.MySqlDatabaseProvider;
@@ -100,6 +101,10 @@ public class DatabaseManager {
             logger.info("[KUpdater] Running database migrations...");
             this.migrationRunner = new MigrationRunner(provider, dialect, logger);
             this.migrationRunner.registerMigration(new V1__InitialSchemaMigration());
+            this.migrationRunner.registerMigration(new V2__CreateToolProgressionSchemaMigration());
+            this.migrationRunner.registerMigration(new io.github.kaivian.kupdater.core.database.migration.V3__AddMaterialToToolProgressionSchemaMigration());
+            this.migrationRunner.registerMigration(new io.github.kaivian.kupdater.core.database.migration.V4__AddXpToToolProgressionSchemaMigration());
+            this.migrationRunner.registerMigration(new io.github.kaivian.kupdater.core.database.migration.V5__AddOverflowXpToToolProgressionSchemaMigration());
             this.migrationRunner.runMigrations();
             logger.info("[KUpdater] Database migrations completed.");
 
