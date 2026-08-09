@@ -98,3 +98,4 @@ public final class KUpdaterPlugin extends JavaPlugin {
         return platformManager;
     }
 }
+

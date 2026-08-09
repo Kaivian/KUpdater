@@ -47,7 +47,6 @@ public class ModuleManager {
         this.databaseManager = databaseManager;
         this.configManager = configManager;
     }
-
     /**
      * Registers a module with the manager.
      *
@@ -144,6 +143,7 @@ public class ModuleManager {
 
         logger.info("Successfully enabled " + enabledCount + "/" + modules.size() + " registered modules.");
     }
+
 
     /**
      * Disables all active registered modules.

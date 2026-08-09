@@ -16,6 +16,7 @@ subprojects {
         maven("https://repo.papermc.io/repository/maven-public/")
     }
 
+
     configure<JavaPluginExtension> {
         toolchain.languageVersion.set(JavaLanguageVersion.of(25))
     }
