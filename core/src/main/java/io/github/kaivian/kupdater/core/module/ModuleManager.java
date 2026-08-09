@@ -2,6 +2,8 @@ package io.github.kaivian.kupdater.core.module;
 
 import io.github.kaivian.kupdater.api.module.KModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
+import io.github.kaivian.kupdater.api.database.PersistenceState;
+import io.github.kaivian.kupdater.core.database.DatabaseManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -20,12 +22,19 @@ public class ModuleManager {
 
     private final JavaPlugin plugin;
     private final Logger logger;
+    private final DatabaseManager databaseManager;
     private final Map<String, KModule> modules = new LinkedHashMap<>();
 
     public ModuleManager(JavaPlugin plugin) {
-        this.plugin = plugin;
-        this.logger = plugin.getLogger();
+        this(plugin, null);
     }
+
+    public ModuleManager(JavaPlugin plugin, DatabaseManager databaseManager) {
+        this.plugin = plugin;
+        this.logger = plugin != null ? plugin.getLogger() : Logger.getLogger("ModuleManager");
+        this.databaseManager = databaseManager;
+    }
+
 
     /**
      * Registers a module with the manager.
@@ -47,6 +56,12 @@ public class ModuleManager {
     public void enableModules() {
         int enabledCount = 0;
         for (KModule module : modules.values()) {
+            if (module.requiresPersistence() && (databaseManager == null || !databaseManager.isAvailable())) {
+                PersistenceState state = databaseManager != null ? databaseManager.getState() : PersistenceState.DISABLED;
+                logger.warning("[KUpdater] Skipping module '" + module.getName() + "' [" + module.getId() + "] because persistence is required but unavailable (State: " + state + ").");
+                continue;
+            }
+
             try {
                 module.onEnable();
                 module.setEnabled(true);
@@ -58,6 +73,7 @@ public class ModuleManager {
         }
         logger.info("Successfully enabled " + enabledCount + "/" + modules.size() + " registered modules.");
     }
+
 
     /**
      * Disables all registered modules.

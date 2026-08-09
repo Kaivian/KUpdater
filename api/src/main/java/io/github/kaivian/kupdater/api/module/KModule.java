@@ -75,4 +75,15 @@ public interface KModule {
      */
     default void reloadConfig(FileConfiguration config) {
     }
+
+    /**
+     * Declares whether this module requires database persistence to function.
+     * If true and persistence is unavailable, ModuleManager will skip enabling this module.
+     *
+     * @return true if database persistence is required, false otherwise
+     */
+    default boolean requiresPersistence() {
+        return false;
+    }
 }
+

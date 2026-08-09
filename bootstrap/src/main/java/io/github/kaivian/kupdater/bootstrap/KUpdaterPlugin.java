@@ -1,6 +1,7 @@
 package io.github.kaivian.kupdater.bootstrap;
 
 import io.github.kaivian.kupdater.core.config.ConfigManager;
+import io.github.kaivian.kupdater.core.database.DatabaseManager;
 import io.github.kaivian.kupdater.core.module.ModuleManager;
 import io.github.kaivian.kupdater.features.combat.CombatModule;
 import io.github.kaivian.kupdater.features.economy.EconomyModule;
@@ -19,6 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class KUpdaterPlugin extends JavaPlugin {
 
     private ConfigManager configManager;
+    private DatabaseManager databaseManager;
     private ModuleManager moduleManager;
     private PlatformManager platformManager;
 
@@ -31,11 +33,16 @@ public final class KUpdaterPlugin extends JavaPlugin {
         this.platformManager.registerAdapter(new Paper1_21Adapter());
         this.platformManager.initialize(getServer().getVersion());
 
-        // Initialize core systems
+        // Initialize core config system
         this.configManager = new ConfigManager(this);
         this.configManager.setup();
 
-        this.moduleManager = new ModuleManager(this);
+        // Initialize database persistence manager
+        this.databaseManager = new DatabaseManager(this);
+        this.databaseManager.setup();
+
+        // Initialize module manager with persistence support
+        this.moduleManager = new ModuleManager(this, this.databaseManager);
 
         // Register feature module skeletons
         registerFeatureModules();
@@ -43,7 +50,7 @@ public final class KUpdaterPlugin extends JavaPlugin {
         // Enable registered modules
         this.moduleManager.enableModules();
 
-        getLogger().info("KUpdater successfully enabled with modular architecture.");
+        getLogger().info("KUpdater startup completed successfully.");
     }
 
     @Override
@@ -54,7 +61,11 @@ public final class KUpdaterPlugin extends JavaPlugin {
             this.moduleManager.disableModules();
         }
 
-        getLogger().info("KUpdater successfully disabled.");
+        if (this.databaseManager != null) {
+            this.databaseManager.shutdown();
+        }
+
+        getLogger().info("KUpdater shutdown completed.");
     }
 
     private void registerFeatureModules() {
@@ -71,6 +82,10 @@ public final class KUpdaterPlugin extends JavaPlugin {
         return configManager;
     }
 
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
     public ModuleManager getModuleManager() {
         return moduleManager;
     }
@@ -79,3 +94,4 @@ public final class KUpdaterPlugin extends JavaPlugin {
         return platformManager;
     }
 }
+
