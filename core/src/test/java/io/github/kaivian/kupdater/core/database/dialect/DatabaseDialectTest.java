@@ -1,10 +1,12 @@
 package io.github.kaivian.kupdater.core.database.dialect;
 
 import io.github.kaivian.kupdater.api.database.DatabaseType;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("unit")
 class DatabaseDialectTest {
 
     @Test

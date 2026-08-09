@@ -5,6 +5,7 @@ import io.github.kaivian.kupdater.api.module.KModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
 import io.github.kaivian.kupdater.core.database.DatabaseManager;
 import io.github.kaivian.kupdater.core.module.ModuleManager;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 class ModuleManagerPersistenceTest {
 
     static class DummyModule implements KModule {

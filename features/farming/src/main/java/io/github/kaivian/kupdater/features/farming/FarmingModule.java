@@ -1,58 +1,33 @@
 package io.github.kaivian.kupdater.features.farming;
 
-import io.github.kaivian.kupdater.api.module.KModule;
+import io.github.kaivian.kupdater.api.module.AbstractKModule;
 import io.github.kaivian.kupdater.api.module.ModuleCategory;
-
-import java.util.Collections;
-import java.util.List;
+import io.github.kaivian.kupdater.api.version.MinecraftVersion;
 
 /**
- * Farming & Agriculture module skeleton.
+ * Farming module implementation.
+ * Supported Minecraft version range: 1.8.8 to 26.2.0.
  */
-public class FarmingModule implements KModule {
+public class FarmingModule extends AbstractKModule {
 
-    private boolean enabled = false;
-
-    @Override
-    public String getId() {
-        return "farming";
-    }
-
-    @Override
-    public String getName() {
-        return "Farming Module";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Farming and agriculture enhancements.";
-    }
-
-    @Override
-    public ModuleCategory getCategory() {
-        return ModuleCategory.FARMING;
-    }
-
-    @Override
-    public List<String> getSupportedMinecraftVersions() {
-        return Collections.singletonList("1.21.x");
+    public FarmingModule() {
+        super(
+                "farming",
+                "Farming Enhancements Module",
+                "Crop and livestock farming mechanics.",
+                ModuleCategory.FARMING,
+                MinecraftVersion.V1_8_8,
+                MinecraftVersion.V26_2
+        );
     }
 
     @Override
     public void onEnable() {
+        // Module enablement logic
     }
 
     @Override
     public void onDisable() {
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        // Module disablement logic
     }
 }

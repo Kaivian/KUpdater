@@ -5,6 +5,7 @@ import io.github.kaivian.kupdater.api.database.DatabaseType;
 import io.github.kaivian.kupdater.api.database.SchemaMigration;
 import io.github.kaivian.kupdater.core.database.dialect.SqliteDialect;
 import io.github.kaivian.kupdater.core.database.provider.SqliteDatabaseProvider;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 class MigrationRunnerTest {
 
     @Test
