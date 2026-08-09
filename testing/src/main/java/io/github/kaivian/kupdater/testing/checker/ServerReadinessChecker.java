@@ -31,7 +31,7 @@ public class ServerReadinessChecker {
         if (containsText("ClassNotFoundException") || containsText("NoClassDefFoundError") || containsText("PluginException")) {
             return FailureCategory.PLUGIN_LOAD_FAILURE;
         }
-        if (containsText("MigrationException") || containsText("HikariPool") || containsText("DatabaseManager")) {
+        if (containsText("MigrationException") || containsText("HikariPool - Error") || containsText("HikariPool - Exception") || containsText("HikariPool - Failed") || containsText("SQLException")) {
             return FailureCategory.DATABASE_FAILURE;
         }
         if (containsText("FAILED_INITIALIZATION") || containsText("failed to initialize cleanly")) {
