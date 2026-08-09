@@ -47,14 +47,6 @@ public class ModuleManager {
         this.databaseManager = databaseManager;
         this.configManager = configManager;
     }
-
-    public ModuleManager(JavaPlugin plugin, DatabaseManager databaseManager) {
-        this.plugin = plugin;
-        this.logger = plugin != null ? plugin.getLogger() : Logger.getLogger("ModuleManager");
-        this.databaseManager = databaseManager;
-    }
-
-
     /**
      * Registers a module with the manager.
      *
