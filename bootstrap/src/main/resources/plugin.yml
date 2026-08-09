@@ -1,0 +1,10 @@
+name: KUpdater
+description: ${description}
+prefix: KUpdater
+version: '${version}'
+
+main: io.github.kaivian.kupdater.bootstrap.KUpdaterPlugin
+api-version: '26.2'
+load: STARTUP
+
+authors: [ Kaivian ]
