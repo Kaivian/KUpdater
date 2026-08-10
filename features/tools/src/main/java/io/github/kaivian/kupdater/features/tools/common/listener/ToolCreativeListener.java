@@ -88,6 +88,13 @@ public class ToolCreativeListener implements Listener {
             return;
         }
 
+        // If a managed tool is being destroyed/cleared in Creative tab
+        if ((item == null || item.getType() == Material.AIR) && hasKUpdaterMetadata(event.getCurrentItem())) {
+            Optional<UUID> toolUuidOpt = toolService.getToolUuidFromItem(event.getCurrentItem());
+            toolUuidOpt.ifPresent(uuid -> toolService.updateState(uuid, ToolState.LOST));
+            return;
+        }
+
         logger.info("[ToolCreative] Player " + player.getName() + " spawned raw " + item.getType().name()
                 + " from Creative. hasOverride=" + (player.hasPermission("kupdater.tool.override") || player.hasPermission("kupdater.admin") || player.isOp()));
 

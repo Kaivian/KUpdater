@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Paper/Brigadier command tree definition for the Tool module (/kupdater tool ...).
@@ -77,6 +78,10 @@ public class ToolCommand extends KCommand {
                 return handleRemove(context);
             case "state":
                 return handleState(context);
+            case "recover":
+            case "recovery":
+            case "rec":
+                return handleRecover(context);
             case "debug":
                 return handleDebug(context);
             case "help":
@@ -96,6 +101,7 @@ public class ToolCommand extends KCommand {
         sendInteractiveHelpLine(context, "/kupdater tool repair [player]", "Restore tool durability to max", "/kupdater tool repair ", "kupdater.tool.repair");
         sendInteractiveHelpLine(context, "/kupdater tool rebuild [player]", "Re-stamp physical item PDC/lore", "/kupdater tool rebuild ", "kupdater.tool.rebuild");
         sendInteractiveHelpLine(context, "/kupdater tool state set <player> <state> [--confirm]", "Change tool lifecycle state", "/kupdater tool state set ", "kupdater.tool.state");
+        sendInteractiveHelpLine(context, "/kupdater tool recover [player] [--force]", "Open Pickaxe Recovery GUI flow", "/kupdater tool recover", "kupdater.tool.recover");
         sendInteractiveHelpLine(context, "/kupdater tool reset <player> [--confirm]", "Reset tool progression state", "/kupdater tool reset ", "kupdater.tool.reset");
         sendInteractiveHelpLine(context, "/kupdater tool reload", "Atomic module configuration reload", "/kupdater tool reload", "kupdater.tool.reload");
         return true;
@@ -512,16 +518,98 @@ public class ToolCommand extends KCommand {
         return true;
     }
 
+    private boolean handleRecover(KCommandContext context) {
+        String perm = toolsModule != null && toolsModule.getToolConfigManager() != null && toolsModule.getToolConfigManager().getRecoveryConfig() != null
+                ? toolsModule.getToolConfigManager().getRecoveryConfig().getPermission()
+                : "kupdater.tool.recover";
+
+        if (!context.sender().hasPermission(perm) && !context.sender().hasPermission("kupdater.tool.admin") && !context.sender().isOp()) {
+            context.replyError("You do not have permission to execute pickaxe recovery.");
+            return true;
+        }
+
+        Optional<Player> targetOpt = context.getArgument("targetPlayer", Player.class);
+        Player targetPlayer = targetOpt.orElseGet(() -> context.isPlayer() ? context.asPlayer() : null);
+
+        if (targetPlayer == null) {
+            context.replyError("Usage: /kupdater tool recover [player] [--force]");
+            return true;
+        }
+
+        boolean force = context.getArgument("force", Boolean.class).orElse(false);
+
+        if (force) {
+            String forcePerm = toolsModule != null && toolsModule.getToolConfigManager() != null && toolsModule.getToolConfigManager().getRecoveryConfig() != null
+                    ? toolsModule.getToolConfigManager().getRecoveryConfig().getAdminForcePermission()
+                    : "kupdater.tool.admin.force";
+
+            if (!context.sender().hasPermission(forcePerm) && !context.sender().isOp()) {
+                context.replyError("You do not have permission to force recovery without penalties.");
+                return true;
+            }
+
+            if (toolsModule != null && toolsModule.getRecoveryTransactionManager() != null) {
+                io.github.kaivian.kupdater.features.tools.common.service.RecoveryTransactionManager.TransactionResult res =
+                        toolsModule.getRecoveryTransactionManager().executeRecovery(targetPlayer, true);
+                if (res.isSuccess()) {
+                    context.replySuccess("Force recovery executed successfully for %s!", targetPlayer.getName());
+                } else {
+                    context.replyError("Force recovery failed: %s", res.getMessage());
+                }
+            }
+            return true;
+        }
+
+        if (!context.isPlayer() && !targetOpt.isPresent()) {
+            context.replyError("Console must specify target player: /kupdater tool recover <player>");
+            return true;
+        }
+
+        Optional<ToolProgression> progOpt = toolsModule.getRepository().findByOwnerAndType(targetPlayer.getUniqueId(), ToolType.PICKAXE);
+        if (!progOpt.isPresent()) {
+            context.replyError("Player %s does not own a KUpdater Pickaxe.", targetPlayer.getName());
+            return true;
+        }
+
+        ToolProgression progression = progOpt.get();
+        if (progression.getState() == ToolState.DESTROYED) {
+            context.replyError("Pickaxe for %s is BROKEN, not LOST. Broken pickaxes cannot be recovered.", targetPlayer.getName());
+            return true;
+        }
+
+        // Auto-detect: If state is ACTIVE, but physical item is missing from inventory (creative delete, /clear, lost), update DB state to LOST
+        if (progression.getState() == ToolState.ACTIVE) {
+            boolean hasItem = hasManagedToolInInventory(targetPlayer, progression.getToolUuid());
+            if (!hasItem) {
+                progression = progression.withState(ToolState.LOST);
+                toolsModule.getRepository().save(progression);
+            }
+        }
+
+        if (progression.getState() != ToolState.LOST) {
+            context.replyError("Pickaxe for %s is currently in your inventory and not in a LOST state.", targetPlayer.getName());
+            return true;
+        }
+
+        if (toolsModule != null && toolsModule.getRecoveryGui() != null && toolsModule.getRecoveryPenaltyEngine() != null) {
+            io.github.kaivian.kupdater.api.tools.model.RecoveryPreview preview = toolsModule.getRecoveryPenaltyEngine().createPreview(targetPlayer, progression);
+            toolsModule.getRecoveryGui().open(targetPlayer, progression, preview);
+        } else {
+            context.replyError("Recovery GUI subsystem is uninitialized.");
+        }
+        return true;
+    }
+
     @Override
     public List<String> tabComplete(KCommandContext context) {
         String[] args = (String[]) context.getParsedArguments().get("rawArgs");
         if (args == null || args.length == 0) {
-            return Arrays.asList("info", "inspect", "xp", "level", "give", "remove", "repair", "rebuild", "state", "reset", "reload", "help", "debug");
+            return Arrays.asList("info", "inspect", "xp", "level", "give", "remove", "repair", "rebuild", "state", "recover", "reset", "reload", "help", "debug");
         }
 
         if (args.length == 1) {
             return filterPrefix(Arrays.asList(
-                    "info", "inspect", "xp", "level", "give", "remove", "repair", "rebuild", "state", "reset", "reload", "help", "debug"
+                    "info", "inspect", "xp", "level", "give", "remove", "repair", "rebuild", "state", "recover", "reset", "reload", "help", "debug"
             ), args[0]);
         }
 
@@ -706,5 +794,30 @@ public class ToolCommand extends KCommand {
             }
         }
         return result;
+    }
+
+    private boolean hasManagedToolInInventory(Player player, UUID toolUuid) {
+        if (player == null || toolUuid == null || toolsModule == null || toolsModule.getToolService() == null) {
+            return false;
+        }
+
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.hasItemMeta()) {
+                Optional<UUID> uuidOpt = toolsModule.getToolService().getToolUuidFromItem(item);
+                if (uuidOpt.isPresent() && uuidOpt.get().equals(toolUuid)) {
+                    return true;
+                }
+            }
+        }
+
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor != null && cursor.hasItemMeta()) {
+            Optional<UUID> uuidOpt = toolsModule.getToolService().getToolUuidFromItem(cursor);
+            if (uuidOpt.isPresent() && uuidOpt.get().equals(toolUuid)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

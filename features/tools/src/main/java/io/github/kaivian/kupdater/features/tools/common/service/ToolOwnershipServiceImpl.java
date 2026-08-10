@@ -46,7 +46,8 @@ public class ToolOwnershipServiceImpl implements ToolOwnershipService {
             ToolProgression progression = progOpt.get();
             return progression.getState() == ToolState.ACTIVE;
         }
-        return true;
+        // Managed tool whose toolUuid is no longer active/valid in DB (outdated recovered pickaxe) -> DENY
+        return false;
     }
 
     @Override

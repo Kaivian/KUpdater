@@ -1,7 +1,9 @@
 package io.github.kaivian.kupdater.api.tools.service;
 
+import io.github.kaivian.kupdater.api.tools.model.RecoveryPreview;
 import io.github.kaivian.kupdater.api.tools.model.ToolProgression;
 import io.github.kaivian.kupdater.api.tools.model.ToolRecoveryPenalty;
+import io.github.kaivian.kupdater.api.tools.model.ToolRecoveryState;
 import io.github.kaivian.kupdater.api.tools.model.ToolType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -11,18 +13,35 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service contract / extension point for future tool recovery implementation.
+ * Service contract for managing pickaxe recovery evaluation, preview generation, and transaction execution.
  */
 public interface ToolRecoveryService {
 
     /**
-     * Checks if a player has a tool in LOST or DESTROYED state available for future recovery.
+     * Checks if a player has a tool in LOST state available for recovery.
      *
      * @param ownerUuid player UUID
      * @param toolType  tool category
-     * @return true if recoverable progression exists
+     * @return true if recoverable progression in LOST state exists
      */
     boolean isRecoverable(UUID ownerUuid, ToolType toolType);
+
+    /**
+     * Creates a server-calculated preview for tool recovery.
+     *
+     * @param player      owner player
+     * @param progression tool progression
+     * @return RecoveryPreview object
+     */
+    RecoveryPreview createPreview(Player player, ToolProgression progression);
+
+    /**
+     * Gets persistent recovery state for a tool UUID.
+     *
+     * @param toolUuid tool UUID
+     * @return Optional containing ToolRecoveryState if found
+     */
+    Optional<ToolRecoveryState> getRecoveryState(UUID toolUuid);
 
     /**
      * Resolves pending recovery penalties for a tool progression.
@@ -33,8 +52,7 @@ public interface ToolRecoveryService {
     List<ToolRecoveryPenalty> getPendingPenalties(ToolProgression progression);
 
     /**
-     * Prepares recovery parameters for restoring a LOST or DESTROYED tool progression.
-     * Note: Full recovery crafting flow is implemented by the future Recovery module.
+     * Prepares recovery item representation.
      *
      * @param player      owner player
      * @param progression tool progression being recovered
