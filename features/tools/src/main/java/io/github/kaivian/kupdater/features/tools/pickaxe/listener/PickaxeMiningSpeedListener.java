@@ -15,8 +15,14 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
@@ -25,6 +31,17 @@ import java.util.UUID;
 /**
  * Dynamically applies Mining Speed attribute to players ONLY when mining Pickaxe-suitable blocks.
  * Block eligibility is determined by the {@code mineable-blocks} list in pickaxe.yml config.
+ * <p>
+ * Ensures the modifier is removed in ALL cases where the player's held item changes or becomes invalid:
+ * - Block break completed
+ * - Hotbar slot change (scroll wheel or number keys)
+ * - Inventory click (moving items in/out of hotbar)
+ * - Player death
+ * - Player respawn
+ * - Item drop (Q key)
+ * - Hand swap (F key)
+ * - Gamemode change
+ * - Player quit
  */
 public class PickaxeMiningSpeedListener implements Listener {
 
@@ -43,7 +60,25 @@ public class PickaxeMiningSpeedListener implements Listener {
         return material.name().endsWith("_PICKAXE");
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    /**
+     * Returns true ONLY if the player is currently holding a managed KUpdater pickaxe in their MAIN HAND.
+     */
+    private boolean isHoldingManagedPickaxeMainHand(Player player) {
+        if (player == null) return false;
+        ItemStack mainHand = player.getInventory().getItemInMainHand();
+        return mainHand != null
+                && !mainHand.getType().isAir()
+                && isPickaxe(mainHand.getType())
+                && toolService.isManagedTool(mainHand);
+    }
+
+    // ==================== APPLY MODIFIER ====================
+
+    /**
+     * Apply mining speed modifier when the player starts damaging a block.
+     * Only applies if the player is holding a managed pickaxe and the block is mineable.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockDamage(BlockDamageEvent event) {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
@@ -73,6 +108,104 @@ public class PickaxeMiningSpeedListener implements Listener {
         applyMiningSpeedModifier(player, bonus);
     }
 
+    // ==================== REMOVE MODIFIER — ALL CASES ====================
+
+    /**
+     * Remove modifier after block is fully broken.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBlockBreak(BlockBreakEvent event) {
+        removeMiningSpeedModifier(event.getPlayer());
+    }
+
+    /**
+     * Remove modifier when player changes held slot (scroll wheel OR number key).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onItemHeldChange(PlayerItemHeldEvent event) {
+        removeMiningSpeedModifier(event.getPlayer());
+    }
+
+    /**
+     * Remove modifier when player clicks inside inventory.
+     * Covers: moving items in/out of hotbar, number key swaps inside inventory screen,
+     * shift-clicking items, etc.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) event.getWhoClicked();
+
+        // Only need to clean up if the click could affect the main hand slot
+        int heldSlot = player.getInventory().getHeldItemSlot();
+
+        // Direct click on held slot
+        boolean affectsHeldSlot = event.getSlot() == heldSlot
+                && event.getClickedInventory() == player.getInventory();
+
+        // Number key hotbar swap (e.g. pressing 1-9 while hovering an item in inventory)
+        boolean isHotbarSwap = event.getClick().name().contains("NUMBER_KEY")
+                && event.getHotbarButton() == heldSlot;
+
+        // Shift-click could move items into or out of the held slot
+        boolean isShiftClick = event.isShiftClick();
+
+        if (affectsHeldSlot || isHotbarSwap || isShiftClick) {
+            removeMiningSpeedModifier(player);
+        }
+    }
+
+    /**
+     * Remove modifier when player dies.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        removeMiningSpeedModifier(event.getEntity());
+    }
+
+    /**
+     * Remove modifier when player respawns (safety net after death).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        removeMiningSpeedModifier(event.getPlayer());
+    }
+
+    /**
+     * Remove modifier when player drops an item (Q key).
+     * The held item may change if it was the last one in the stack.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onItemDrop(PlayerDropItemEvent event) {
+        removeMiningSpeedModifier(event.getPlayer());
+    }
+
+    /**
+     * Remove modifier when player swaps main/off hand (F key).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onHandSwap(PlayerSwapHandItemsEvent event) {
+        removeMiningSpeedModifier(event.getPlayer());
+    }
+
+    /**
+     * Remove modifier when player changes gamemode (e.g. survival -> creative).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onGameModeChange(PlayerGameModeChangeEvent event) {
+        removeMiningSpeedModifier(event.getPlayer());
+    }
+
+    /**
+     * Remove modifier when player quits (cleanup).
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        removeMiningSpeedModifier(event.getPlayer());
+    }
+
+    // ==================== VANILLA BASE SPEED MAP ====================
+
     private double getVanillaBaseSpeed(Material material) {
         if (material == null) return 1.0;
         if ("COPPER_PICKAXE".equalsIgnoreCase(material.name())) {
@@ -96,22 +229,15 @@ public class PickaxeMiningSpeedListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onBlockBreak(BlockBreakEvent event) {
-        removeMiningSpeedModifier(event.getPlayer());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onItemHeldChange(PlayerItemHeldEvent event) {
-        removeMiningSpeedModifier(event.getPlayer());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        removeMiningSpeedModifier(event.getPlayer());
-    }
+    // ==================== MODIFIER APPLY / REMOVE ====================
 
     private void applyMiningSpeedModifier(Player player, double bonus) {
+        // Final safety gate: only apply if a managed pickaxe is actually in main hand
+        if (!isHoldingManagedPickaxeMainHand(player)) {
+            removeMiningSpeedModifier(player);
+            return;
+        }
+
         AttributeInstance attrInst = getBreakSpeedAttributeInstance(player);
         if (attrInst == null) return;
 

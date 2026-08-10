@@ -21,6 +21,8 @@ import io.github.kaivian.kupdater.features.tools.common.repository.JdbcToolRepos
 import io.github.kaivian.kupdater.features.tools.common.service.ToolDurabilityServiceImpl;
 import io.github.kaivian.kupdater.features.tools.common.service.ToolOwnershipServiceImpl;
 import io.github.kaivian.kupdater.features.tools.common.service.ToolRecoveryServiceImpl;
+import io.github.kaivian.kupdater.features.tools.common.service.ToolAdminService;
+import io.github.kaivian.kupdater.features.tools.common.service.ToolItemSynchronizer;
 import io.github.kaivian.kupdater.features.tools.common.service.ToolServiceImpl;
 import io.github.kaivian.kupdater.features.tools.common.validation.ProgressionBalanceValidator;
 import io.github.kaivian.kupdater.features.tools.pickaxe.listener.PickaxeRegistrationListener;
@@ -49,6 +51,9 @@ public class ToolsModule extends AbstractKModule {
     private ToolUpgradeService upgradeService;
     private ToolRecoveryService recoveryService;
     private ToolRecipeManager recipeManager;
+    private ToolItemSynchronizer itemSynchronizer;
+    private io.github.kaivian.kupdater.features.tools.common.service.ToolAdminService adminService;
+    private io.github.kaivian.kupdater.core.command.confirmation.CommandConfirmationService confirmationService;
 
     public ToolsModule() {
         this(null, null, null);
@@ -106,6 +111,12 @@ public class ToolsModule extends AbstractKModule {
         this.upgradeService = new PickaxeUpgradeServiceImpl(this.toolService, this.repository, this.toolConfigManager, new ProgressionBalanceValidator(logger), logger);
         this.recoveryService = new ToolRecoveryServiceImpl(this.repository);
 
+        this.itemSynchronizer = new io.github.kaivian.kupdater.features.tools.common.service.ToolItemSynchronizer(plugin, this.toolService, this.metadataService, this.toolConfigManager, logger);
+        this.confirmationService = new io.github.kaivian.kupdater.core.command.confirmation.CommandConfirmationService();
+        this.adminService = new io.github.kaivian.kupdater.features.tools.common.service.ToolAdminServiceImpl(
+                this.toolService, this.repository, this.toolConfigManager, this.itemSynchronizer, this.confirmationService, logger
+        );
+
         // 4. Register Event Listeners
         if (plugin != null && plugin.getServer() != null && plugin.getServer().getPluginManager() != null) {
             PluginManager pm = plugin.getServer().getPluginManager();
@@ -117,6 +128,7 @@ public class ToolsModule extends AbstractKModule {
             pm.registerEvents(new io.github.kaivian.kupdater.features.tools.pickaxe.listener.PickaxeMiningSpeedListener(this.toolService, this.toolConfigManager), plugin);
             pm.registerEvents(new ToolDurabilityListener(this.toolService, this.durabilityService), plugin);
             pm.registerEvents(new ToolLossListener(this.toolService), plugin);
+            pm.registerEvents(new io.github.kaivian.kupdater.features.tools.common.listener.ToolCreativeListener(this.toolService, this.repository, this.toolConfigManager, plugin), plugin);
         }
 
         // 5. Register Crafting Recipes
@@ -137,23 +149,33 @@ public class ToolsModule extends AbstractKModule {
         logger.info("[ToolUpdater] Disabled Pickaxe progression module.");
     }
 
-    public void reloadConfig() {
+    public boolean reloadConfigAtomic() {
         Logger logger = plugin != null ? plugin.getLogger() : Logger.getLogger("ToolsModule");
-        if (this.toolConfigManager == null) {
-            this.toolConfigManager = new ToolConfigManager(logger);
+        try {
+            ToolConfigManager candidate = new ToolConfigManager(logger);
+            if (configManager != null) {
+                org.bukkit.configuration.file.FileConfiguration sharedConfig = configManager.loadModuleConfigFile("tools", "tool-config.yml");
+                org.bukkit.configuration.file.FileConfiguration pickaxeConfig = configManager.loadModuleConfigFile("tools", "pickaxe.yml");
+                candidate.load(sharedConfig, pickaxeConfig);
+            } else {
+                candidate.load(null);
+            }
+
+            this.toolConfigManager = candidate;
+            if (recipeManager != null) {
+                recipeManager.unregisterUpgradeRecipes();
+                recipeManager.registerUpgradeRecipes();
+            }
+            logger.info("[ToolUpdater] Reloaded tools module configuration atomically.");
+            return true;
+        } catch (Throwable t) {
+            logger.severe("[ToolUpdater] Failed to reload tools module configuration: " + t.getMessage());
+            return false;
         }
-        if (configManager != null) {
-            org.bukkit.configuration.file.FileConfiguration sharedConfig = configManager.loadModuleConfigFile("tools", "tool-config.yml");
-            org.bukkit.configuration.file.FileConfiguration pickaxeConfig = configManager.loadModuleConfigFile("tools", "pickaxe.yml");
-            this.toolConfigManager.load(sharedConfig, pickaxeConfig);
-        } else {
-            this.toolConfigManager.load(null);
-        }
-        if (recipeManager != null) {
-            recipeManager.unregisterUpgradeRecipes();
-            recipeManager.registerUpgradeRecipes();
-        }
-        logger.info("[ToolUpdater] Reloaded tools module configuration.");
+    }
+
+    public void reloadConfig() {
+        reloadConfigAtomic();
     }
 
     public ToolConfigManager getToolConfigManager() {
@@ -186,5 +208,13 @@ public class ToolsModule extends AbstractKModule {
 
     public ToolRecoveryService getRecoveryService() {
         return recoveryService;
+    }
+
+    public io.github.kaivian.kupdater.features.tools.common.service.ToolAdminService getAdminService() {
+        return adminService;
+    }
+
+    public io.github.kaivian.kupdater.features.tools.common.service.ToolItemSynchronizer getItemSynchronizer() {
+        return itemSynchronizer;
     }
 }

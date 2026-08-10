@@ -606,4 +606,13 @@ public class ToolConfigManager {
         if (material == null || material.isAir()) return false;
         return pickaxeMineableBlocks.contains(material);
     }
+
+    /**
+     * Returns an unmodifiable set of all tool materials configured in the plugin.
+     *
+     * @return set of configured ToolMaterial instances
+     */
+    public java.util.Set<ToolMaterial> getConfiguredMaterials() {
+        return java.util.Collections.unmodifiableSet(materialStats.keySet());
+    }
 }
