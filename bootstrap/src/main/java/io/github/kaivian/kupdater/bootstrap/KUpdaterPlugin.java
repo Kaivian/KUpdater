@@ -25,6 +25,7 @@ public final class KUpdaterPlugin extends JavaPlugin {
     private DatabaseManager databaseManager;
     private ModuleManager moduleManager;
     private PlatformManager platformManager;
+    private io.github.kaivian.kupdater.core.command.CommandManager commandManager;
 
     @Override
     public void onEnable() {
@@ -48,13 +49,34 @@ public final class KUpdaterPlugin extends JavaPlugin {
         // Initialize module manager with persistence and config support
         this.moduleManager = new ModuleManager(this, this.databaseManager, this.configManager);
 
+        // Initialize command manager with platform-appropriate backend
+        io.github.kaivian.kupdater.api.command.CommandBackend backend;
+        io.github.kaivian.kupdater.platform.v1_21.command.PaperCommandBackend paperBackend =
+                new io.github.kaivian.kupdater.platform.v1_21.command.PaperCommandBackend(this);
+        if (paperBackend.isSupported()) {
+            backend = paperBackend;
+        } else {
+            backend = new io.github.kaivian.kupdater.platform.common.command.BukkitCommandBackend(this);
+        }
+        this.commandManager = new io.github.kaivian.kupdater.core.command.CommandManager(this, backend);
+
         // Register feature module skeletons
         registerFeatureModules();
 
         // Enable registered modules against current server version
         this.moduleManager.enableModules(getServer().getVersion());
 
-        // Register plugin commands
+        // Register module commands if module is enabled
+        this.moduleManager.getModule("tools").ifPresent(mod -> {
+            if (mod instanceof ToolsModule && mod.isEnabled()) {
+                ToolsModule toolsMod = (ToolsModule) mod;
+                if (toolsMod.getAdminService() != null) {
+                    this.commandManager.registerModuleCommands(toolsMod, new io.github.kaivian.kupdater.features.tools.command.ToolCommand(toolsMod, toolsMod.getAdminService()));
+                }
+            }
+        });
+
+        // Register plugin root commands
         registerCommands();
 
         getLogger().info("KUpdater startup completed successfully.");
@@ -100,6 +122,10 @@ public final class KUpdaterPlugin extends JavaPlugin {
     public void onDisable() {
         getLogger().info("Shutting down KUpdater...");
 
+        if (this.commandManager != null) {
+            this.commandManager.clear();
+        }
+
         if (this.moduleManager != null) {
             this.moduleManager.disableModules();
         }
@@ -135,6 +161,10 @@ public final class KUpdaterPlugin extends JavaPlugin {
 
     public PlatformManager getPlatformManager() {
         return platformManager;
+    }
+
+    public io.github.kaivian.kupdater.core.command.CommandManager getCommandManager() {
+        return commandManager;
     }
 }
 
