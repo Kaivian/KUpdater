@@ -23,6 +23,85 @@ messages:
   reload-success: "&a★ [KUpdater] Configuration reloaded successfully in %duration%ms!"
   no-permission: "&cYou do not have permission to execute this command."
 
+# ==============================================================================
+#                      Pickaxe Recovery System Settings
+# ==============================================================================
+recovery:
+  enabled: true
+  permission: "kupdater.tool.recover"
+  admin-force-permission: "kupdater.tool.admin.force"
+
+  gui:
+    enabled: true
+    title: "&8Pickaxe Recovery"
+    rows: 5
+    # When enabled, clicking the action button requires a 3-second confirmation countdown
+    confirm-on-recovery: true
+    confirm-delay-ticks: 60
+
+  limits:
+    maximum-recoveries: -1
+
+  penalties:
+    durability:
+      enabled: true
+      base-percent: 20.0
+      increment-percent: 10.0
+      maximum-percent: 80.0
+
+    currency:
+      enabled: true
+      base: 500.0
+      increment: 250.0
+      maximum: 5000.0
+
+    items:
+      enabled: true
+      base-multiplier: 1.0
+      increment-multiplier: 0.5
+      maximum-multiplier: 5.0
+      tier-requirements:
+        WOODEN:
+          - material: OAK_PLANKS
+            amount: 4
+        STONE:
+          - material: COBBLESTONE
+            amount: 8
+        COPPER:
+          - material: COPPER_INGOT
+            amount: 4
+        IRON:
+          - material: IRON_INGOT
+            amount: 4
+        GOLD:
+          - material: GOLD_INGOT
+            amount: 4
+        DIAMOND:
+          - material: DIAMOND
+            amount: 2
+        NETHERITE:
+          - material: NETHERITE_SCRAP
+            amount: 2
+          - material: DIAMOND
+            amount: 1
+
+    cooldown:
+      enabled: true
+      base-seconds: 21600
+      increment-seconds: 7200
+      maximum-seconds: 86400
+
+  messages:
+    not-lost: "&c★ Recovery unavailable: Your pickaxe is not in a LOST state."
+    broken-cannot-recover: "&c★ Recovery unavailable: Your pickaxe is broken, not lost. Repair it instead!"
+    on-cooldown: "&c★ Recovery is on cooldown! Please wait %remaining%."
+    insufficient-funds: "&c★ You need $%cost% to recover your pickaxe (Balance: $%balance%)."
+    missing-items: "&c★ You do not have all required items for recovery."
+    inventory-full: "&c★ Recovery unavailable: You need at least 1 free inventory slot."
+    economy-unavailable: "&c★ Recovery unavailable: Economy provider (Vault) is currently disabled."
+    already-processing: "&c★ Recovery transaction is already processing. Please wait."
+    max-recoveries: "&c★ You have reached the maximum allowed recoveries (%max%)."
+
 # Legacy message fallback keys (backward compatibility)
 deny-message: "This Pickaxe does not belong to you."
 broken-message: "This Pickaxe is broken and cannot be used."

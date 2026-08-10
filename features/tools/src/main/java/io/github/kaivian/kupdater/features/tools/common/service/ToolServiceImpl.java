@@ -144,6 +144,13 @@ public class ToolServiceImpl implements ToolService {
     @Override
     public void applyMetadataToItem(ItemStack itemStack, ToolProgression progression) {
         if (itemStack == null || progression == null) return;
+
+        // Synchronize Bukkit Material to match the progression's ToolMaterial
+        org.bukkit.Material expectedMaterial = configManager.getBukkitMaterial(progression.getMaterial());
+        if (expectedMaterial != null && itemStack.getType() != expectedMaterial) {
+            itemStack.setType(expectedMaterial);
+        }
+
         io.github.kaivian.kupdater.api.tools.model.ToolStat stat = configManager.getStat(progression.getMaterial(), progression.getLevel());
         metadataService.stampMetadata(itemStack, progression, stat.getMaxDurability(), stat.getRequiredXp(), stat.getMiningSpeedMultiplier());
     }

@@ -105,6 +105,7 @@ public class DatabaseManager {
             this.migrationRunner.registerMigration(new io.github.kaivian.kupdater.core.database.migration.V3__AddMaterialToToolProgressionSchemaMigration());
             this.migrationRunner.registerMigration(new io.github.kaivian.kupdater.core.database.migration.V4__AddXpToToolProgressionSchemaMigration());
             this.migrationRunner.registerMigration(new io.github.kaivian.kupdater.core.database.migration.V5__AddOverflowXpToToolProgressionSchemaMigration());
+            this.migrationRunner.registerMigration(new io.github.kaivian.kupdater.core.database.migration.V6__CreateToolRecoverySchemaMigration());
             this.migrationRunner.runMigrations();
             logger.info("[KUpdater] Database migrations completed.");
 

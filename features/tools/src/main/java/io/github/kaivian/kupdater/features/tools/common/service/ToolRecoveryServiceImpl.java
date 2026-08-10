@@ -1,9 +1,12 @@
 package io.github.kaivian.kupdater.features.tools.common.service;
 
+import io.github.kaivian.kupdater.api.tools.model.RecoveryPreview;
 import io.github.kaivian.kupdater.api.tools.model.ToolProgression;
 import io.github.kaivian.kupdater.api.tools.model.ToolRecoveryPenalty;
+import io.github.kaivian.kupdater.api.tools.model.ToolRecoveryState;
 import io.github.kaivian.kupdater.api.tools.model.ToolState;
 import io.github.kaivian.kupdater.api.tools.model.ToolType;
+import io.github.kaivian.kupdater.api.tools.repository.ToolRecoveryRepository;
 import io.github.kaivian.kupdater.api.tools.repository.ToolRepository;
 import io.github.kaivian.kupdater.api.tools.service.ToolRecoveryService;
 import org.bukkit.entity.Player;
@@ -15,25 +18,62 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Implementation of ToolRecoveryService for recovering lost or destroyed tools.
+ * Primary implementation of ToolRecoveryService delegating calculations to RecoveryPenaltyEngine
+ * and transactions to RecoveryTransactionManager.
  */
 public class ToolRecoveryServiceImpl implements ToolRecoveryService {
 
-    private final ToolRepository repository;
+    private final ToolRepository toolRepository;
+    private final ToolRecoveryRepository recoveryRepository;
+    private final RecoveryPenaltyEngine penaltyEngine;
+    private final RecoveryTransactionManager transactionManager;
 
-    public ToolRecoveryServiceImpl(ToolRepository repository) {
-        this.repository = repository;
+    public ToolRecoveryServiceImpl(ToolRepository toolRepository,
+                                  ToolRecoveryRepository recoveryRepository,
+                                  RecoveryPenaltyEngine penaltyEngine,
+                                  RecoveryTransactionManager transactionManager) {
+        this.toolRepository = toolRepository;
+        this.recoveryRepository = recoveryRepository;
+        this.penaltyEngine = penaltyEngine;
+        this.transactionManager = transactionManager;
     }
 
     @Override
     public boolean isRecoverable(UUID ownerUuid, ToolType toolType) {
         if (ownerUuid == null || toolType == null) return false;
 
-        Optional<ToolProgression> progOpt = repository.findByOwnerAndType(ownerUuid, toolType);
+        Optional<ToolProgression> progOpt = toolRepository.findByOwnerAndType(ownerUuid, toolType);
         if (!progOpt.isPresent()) return false;
 
         ToolProgression progression = progOpt.get();
-        return progression.getState() == ToolState.LOST || progression.getState() == ToolState.DESTROYED;
+        // Strictly LOST state ONLY
+        return progression.getState() == ToolState.LOST;
+    }
+
+    @Override
+    public RecoveryPreview createPreview(Player player, ToolProgression progression) {
+        if (penaltyEngine == null) {
+            return new RecoveryPreview(RecoveryPreview.Status.DISABLED, player != null ? player.getUniqueId() : null,
+                    progression, null, 0, 0, 0.0, 0, 0, 0.0, 0.0, false,
+                    null, false, 0, 0, "Penalty engine uninitialized.");
+        }
+        return penaltyEngine.createPreview(player, progression);
+    }
+
+    @Override
+    public Optional<ToolRecoveryState> getRecoveryState(UUID toolUuid) {
+        if (toolUuid == null || recoveryRepository == null) return Optional.empty();
+        return recoveryRepository.findByToolUuid(toolUuid);
+    }
+
+    public RecoveryTransactionManager.TransactionResult executeRecovery(Player player, boolean adminForce) {
+        if (transactionManager == null) {
+            return new RecoveryTransactionManager.TransactionResult(
+                    RecoveryTransactionManager.ResultType.FAILED_SYSTEM_ERROR,
+                    "Transaction manager uninitialized.", null, null
+            );
+        }
+        return transactionManager.executeRecovery(player, adminForce);
     }
 
     @Override
@@ -41,10 +81,22 @@ public class ToolRecoveryServiceImpl implements ToolRecoveryService {
         List<ToolRecoveryPenalty> penalties = new ArrayList<>();
         if (progression == null) return penalties;
 
-        if (progression.getState() == ToolState.DESTROYED) {
-            penalties.add(new ToolRecoveryPenalty(ToolRecoveryPenalty.Type.DURABILITY_PENALTY, 0, "Durability reset to default upon recovery"));
-        } else if (progression.getState() == ToolState.LOST) {
-            penalties.add(new ToolRecoveryPenalty(ToolRecoveryPenalty.Type.LEVEL_PENALTY, 1, "Level penalty required to recover lost tool"));
+        if (progression.getState() == ToolState.LOST) {
+            RecoveryPreview preview = createPreview(null, progression);
+            if (preview.getDurabilityPenaltyPercent() > 0) {
+                penalties.add(new ToolRecoveryPenalty(
+                        ToolRecoveryPenalty.Type.DURABILITY_PENALTY,
+                        preview.getDurabilityPenaltyPercent(),
+                        "Durability penalty applied: " + String.format("%.1f", preview.getDurabilityPenaltyPercent()) + "%"
+                ));
+            }
+            if (preview.getCurrencyCost() > 0) {
+                penalties.add(new ToolRecoveryPenalty(
+                        ToolRecoveryPenalty.Type.CUSTOM,
+                        preview.getCurrencyCost(),
+                        "Currency requirement: $" + String.format("%.2f", preview.getCurrencyCost())
+                ));
+            }
         }
 
         return penalties;
@@ -57,10 +109,10 @@ public class ToolRecoveryServiceImpl implements ToolRecoveryService {
             return Optional.empty();
         }
 
-        ToolProgression recovered = progression.withState(ToolState.ACTIVE);
-        repository.save(recovered);
-
-        ItemStack item = new ItemStack(progression.getMaterial().getBukkitMaterial());
-        return Optional.of(item);
+        RecoveryTransactionManager.TransactionResult result = executeRecovery(player, false);
+        if (result.isSuccess() && result.getRecoveredItem() != null) {
+            return Optional.of(result.getRecoveredItem());
+        }
+        return Optional.empty();
     }
 }

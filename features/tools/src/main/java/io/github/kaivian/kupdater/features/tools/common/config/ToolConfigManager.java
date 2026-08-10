@@ -44,6 +44,7 @@ public class ToolConfigManager {
     private final Map<ToolMaterial, Material> materialBukkitMaterials = new EnumMap<>(ToolMaterial.class);
     private final Map<Material, Integer> blockXpMap = new EnumMap<>(Material.class);
     private final java.util.Set<Material> pickaxeMineableBlocks = new java.util.HashSet<>();
+    private RecoveryConfig recoveryConfig;
 
     private int defaultBlockXp = 1;
     private String defaultOwnershipDenyMessage = "&cThis Pickaxe does not belong to you.";
@@ -293,6 +294,8 @@ public class ToolConfigManager {
         if (materialStats.isEmpty()) {
             loadDefaultMaterialTierStats();
         }
+
+        this.recoveryConfig = parseRecoveryConfig(config);
     }
 
     public Material getBukkitMaterial(ToolMaterial material) {
@@ -605,5 +608,321 @@ public class ToolConfigManager {
     public boolean isPickaxeMineableBlock(Material material) {
         if (material == null || material.isAir()) return false;
         return pickaxeMineableBlocks.contains(material);
+    }
+
+    /**
+     * Returns an unmodifiable set of all tool materials configured in the plugin.
+     *
+     * @return set of configured ToolMaterial instances
+     */
+    public java.util.Set<ToolMaterial> getConfiguredMaterials() {
+        return java.util.Collections.unmodifiableSet(materialStats.keySet());
+    }
+
+    public RecoveryConfig getRecoveryConfig() {
+        if (recoveryConfig == null) {
+            recoveryConfig = parseRecoveryConfig(null);
+        }
+        return recoveryConfig;
+    }
+
+    private RecoveryConfig parseRecoveryConfig(FileConfiguration config) {
+        if (config == null) {
+            return createDefaultRecoveryConfig();
+        }
+
+        ConfigurationSection recSec = config.getConfigurationSection("recovery");
+        if (recSec == null) {
+            recSec = config.getConfigurationSection("pickaxe.recovery");
+        }
+        if (recSec == null) {
+            recSec = config.getConfigurationSection("tools.pickaxe.recovery");
+        }
+        if (recSec == null) {
+            return createDefaultRecoveryConfig();
+        }
+
+        boolean enabled = recSec.getBoolean("enabled", true);
+        String permission = recSec.getString("permission", "kupdater.tool.recover");
+        String adminForcePermission = recSec.getString("admin-force-permission", "kupdater.tool.admin.force");
+        boolean guiEnabled = recSec.getBoolean("gui.enabled", true);
+        String guiTitle = recSec.getString("gui.title", "&8Pickaxe Recovery");
+        int guiRows = recSec.getInt("gui.rows", 5);
+        boolean confirmOnRecovery = recSec.getBoolean("gui.confirm-on-recovery", true);
+        int confirmDelayTicks = recSec.getInt("gui.confirm-delay-ticks", 60);
+
+        int maxRecoveries = recSec.getInt("limits.maximum-recoveries", -1);
+
+        boolean durEnabled = recSec.getBoolean("penalties.durability.enabled", true);
+        double durBase = recSec.getDouble("penalties.durability.base-percent", 20.0);
+        double durInc = recSec.getDouble("penalties.durability.increment-percent", 10.0);
+        double durMax = recSec.getDouble("penalties.durability.maximum-percent", 80.0);
+
+        boolean currEnabled = recSec.getBoolean("penalties.currency.enabled", true);
+        double currBase = recSec.getDouble("penalties.currency.base", 500.0);
+        double currInc = recSec.getDouble("penalties.currency.increment", 250.0);
+        double currMax = recSec.getDouble("penalties.currency.maximum", 5000.0);
+
+        boolean itemsEnabled = recSec.getBoolean("penalties.items.enabled", true);
+        double itemsBaseMult = recSec.getDouble("penalties.items.base-multiplier", 1.0);
+        double itemsIncMult = recSec.getDouble("penalties.items.increment-multiplier", 0.5);
+        double itemsMaxMult = recSec.getDouble("penalties.items.maximum-multiplier", 5.0);
+
+        java.util.Map<String, java.util.List<RecoveryItemRequirement>> tierItemReqs = new java.util.HashMap<>();
+        ConfigurationSection tierReqSec = recSec.getConfigurationSection("penalties.items.tier-requirements");
+        if (tierReqSec != null) {
+            for (String tierKey : tierReqSec.getKeys(false)) {
+                java.util.List<RecoveryItemRequirement> tierList = new java.util.ArrayList<>();
+                if (tierReqSec.isList(tierKey)) {
+                    for (java.util.Map<?, ?> map : tierReqSec.getMapList(tierKey)) {
+                        Object matObj = map.get("material");
+                        Object amtObj = map.get("amount");
+                        if (matObj != null && amtObj != null) {
+                            Material mat = parseMaterial(matObj.toString());
+                            int amt = parseIntSafe(amtObj.toString(), 1);
+                            if (mat != null) {
+                                tierList.add(new RecoveryItemRequirement(mat, Math.max(1, amt)));
+                            }
+                        }
+                    }
+                }
+                if (!tierList.isEmpty()) {
+                    tierItemReqs.put(tierKey.toUpperCase(), tierList);
+                }
+            }
+        }
+        if (tierItemReqs.isEmpty() && recSec.isList("penalties.items.requirements")) {
+            java.util.List<RecoveryItemRequirement> flatReqs = new java.util.ArrayList<>();
+            for (java.util.Map<?, ?> map : recSec.getMapList("penalties.items.requirements")) {
+                Object matObj = map.get("material");
+                Object amtObj = map.get("amount");
+                if (matObj != null && amtObj != null) {
+                    Material mat = parseMaterial(matObj.toString());
+                    int amt = parseIntSafe(amtObj.toString(), 1);
+                    if (mat != null) {
+                        flatReqs.add(new RecoveryItemRequirement(mat, Math.max(1, amt)));
+                    }
+                }
+            }
+            if (!flatReqs.isEmpty()) {
+                for (io.github.kaivian.kupdater.api.tools.model.ToolMaterial tm : io.github.kaivian.kupdater.api.tools.model.ToolMaterial.values()) {
+                    tierItemReqs.put(tm.name(), flatReqs);
+                }
+            }
+        }
+        if (tierItemReqs.isEmpty()) {
+            tierItemReqs = createDefaultTierItemRequirements();
+        }
+
+        boolean cdEnabled = recSec.getBoolean("penalties.cooldown.enabled", true);
+        long cdBase = recSec.getLong("penalties.cooldown.base-seconds", 21600L);
+        long cdInc = recSec.getLong("penalties.cooldown.increment-seconds", 7200L);
+        long cdMax = recSec.getLong("penalties.cooldown.maximum-seconds", 86400L);
+
+        ConfigurationSection msgSec = recSec.getConfigurationSection("messages");
+        String msgNotLost = msgSec != null ? msgSec.getString("not-lost") : null;
+        String msgBroken = msgSec != null ? msgSec.getString("broken-cannot-recover") : null;
+        String msgCooldown = msgSec != null ? msgSec.getString("on-cooldown") : null;
+        String msgFunds = msgSec != null ? msgSec.getString("insufficient-funds") : null;
+        String msgItems = msgSec != null ? msgSec.getString("missing-items") : null;
+        String msgInvFull = msgSec != null ? msgSec.getString("inventory-full") : null;
+        String msgEconUnavail = msgSec != null ? msgSec.getString("economy-unavailable") : null;
+        String msgProcessing = msgSec != null ? msgSec.getString("already-processing") : null;
+        String msgMaxRec = msgSec != null ? msgSec.getString("max-recoveries") : null;
+
+        return new RecoveryConfig(
+                enabled, permission, adminForcePermission, guiEnabled, guiTitle, guiRows, confirmOnRecovery, confirmDelayTicks, maxRecoveries,
+                durEnabled, durBase, durInc, durMax,
+                currEnabled, currBase, currInc, currMax,
+                itemsEnabled, itemsBaseMult, itemsIncMult, itemsMaxMult, tierItemReqs,
+                cdEnabled, cdBase, cdInc, cdMax,
+                msgNotLost, msgBroken, msgCooldown, msgFunds, msgItems, msgInvFull, msgEconUnavail, msgProcessing, msgMaxRec
+        );
+    }
+
+    private java.util.Map<String, java.util.List<RecoveryItemRequirement>> createDefaultTierItemRequirements() {
+        java.util.Map<String, java.util.List<RecoveryItemRequirement>> map = new java.util.HashMap<>();
+        map.put("WOODEN", java.util.Arrays.asList(new RecoveryItemRequirement(Material.OAK_PLANKS, 4)));
+        map.put("STONE", java.util.Arrays.asList(new RecoveryItemRequirement(Material.COBBLESTONE, 8)));
+        map.put("IRON", java.util.Arrays.asList(new RecoveryItemRequirement(Material.IRON_INGOT, 4)));
+        map.put("GOLD", java.util.Arrays.asList(new RecoveryItemRequirement(Material.GOLD_INGOT, 4)));
+        map.put("DIAMOND", java.util.Arrays.asList(new RecoveryItemRequirement(Material.DIAMOND, 2)));
+        map.put("NETHERITE", java.util.Arrays.asList(
+                new RecoveryItemRequirement(Material.DIAMOND, 1)
+        ));
+        return map;
+    }
+
+    private Material parseMaterial(String str) {
+        try { return Material.valueOf(str.toUpperCase()); } catch (Throwable ignored) {}
+        try { return Material.matchMaterial(str); } catch (Throwable ignored) {}
+        return null;
+    }
+
+    private int parseIntSafe(String str, int fallback) {
+        try { return Integer.parseInt(str); } catch (NumberFormatException e) { return fallback; }
+    }
+
+    private RecoveryConfig createDefaultRecoveryConfig() {
+        return new RecoveryConfig(
+                true, "kupdater.tool.recover", "kupdater.tool.admin.force",
+                true, "&8Pickaxe Recovery", 5, true, 60, -1,
+                true, 20.0, 10.0, 80.0,
+                true, 500.0, 250.0, 5000.0,
+                true, 1.0, 0.5, 5.0, createDefaultTierItemRequirements(),
+                true, 21600L, 7200L, 86400L,
+                null, null, null, null, null, null, null, null, null
+        );
+    }
+
+    public static class RecoveryItemRequirement {
+        private final Material material;
+        private final int baseAmount;
+
+        public RecoveryItemRequirement(Material material, int baseAmount) {
+            this.material = material;
+            this.baseAmount = Math.max(1, baseAmount);
+        }
+
+        public Material getMaterial() { return material; }
+        public int getBaseAmount() { return baseAmount; }
+    }
+
+    public static class RecoveryConfig {
+        private final boolean enabled;
+        private final String permission;
+        private final String adminForcePermission;
+        private final boolean guiEnabled;
+        private final String guiTitle;
+        private final int guiRows;
+        private final boolean confirmOnRecovery;
+        private final int confirmDelayTicks;
+        private final int maximumRecoveries;
+
+        private final boolean durabilityPenaltyEnabled;
+        private final double durabilityBasePercent;
+        private final double durabilityIncrementPercent;
+        private final double durabilityMaximumPercent;
+
+        private final boolean currencyEnabled;
+        private final double currencyBase;
+        private final double currencyIncrement;
+        private final double currencyMaximum;
+
+        private final boolean itemsEnabled;
+        private final double itemsBaseMultiplier;
+        private final double itemsIncrementMultiplier;
+        private final double itemsMaximumMultiplier;
+        private final java.util.Map<String, java.util.List<RecoveryItemRequirement>> tierItemRequirements;
+
+        private final boolean cooldownEnabled;
+        private final long cooldownBaseSeconds;
+        private final long cooldownIncrementSeconds;
+        private final long cooldownMaximumSeconds;
+
+        private final String msgNotLost;
+        private final String msgBrokenCannotRecover;
+        private final String msgOnCooldown;
+        private final String msgInsufficientFunds;
+        private final String msgMissingItems;
+        private final String msgInventoryFull;
+        private final String msgEconomyUnavailable;
+        private final String msgAlreadyProcessing;
+        private final String msgMaxRecoveries;
+
+        public RecoveryConfig(boolean enabled, String permission, String adminForcePermission,
+                              boolean guiEnabled, String guiTitle, int guiRows, boolean confirmOnRecovery, int confirmDelayTicks, int maximumRecoveries,
+                              boolean durabilityPenaltyEnabled, double durabilityBasePercent, double durabilityIncrementPercent, double durabilityMaximumPercent,
+                              boolean currencyEnabled, double currencyBase, double currencyIncrement, double currencyMaximum,
+                              boolean itemsEnabled, double itemsBaseMultiplier, double itemsIncrementMultiplier, double itemsMaximumMultiplier,
+                              java.util.Map<String, java.util.List<RecoveryItemRequirement>> tierItemRequirements,
+                              boolean cooldownEnabled, long cooldownBaseSeconds, long cooldownIncrementSeconds, long cooldownMaximumSeconds,
+                              String msgNotLost, String msgBrokenCannotRecover, String msgOnCooldown, String msgInsufficientFunds,
+                              String msgMissingItems, String msgInventoryFull, String msgEconomyUnavailable, String msgAlreadyProcessing, String msgMaxRecoveries) {
+            this.enabled = enabled;
+            this.permission = permission != null ? permission : "kupdater.tool.recover";
+            this.adminForcePermission = adminForcePermission != null ? adminForcePermission : "kupdater.tool.admin.force";
+            this.guiEnabled = guiEnabled;
+            this.guiTitle = guiTitle != null ? guiTitle : "&8Pickaxe Recovery";
+            this.guiRows = Math.max(3, Math.min(6, guiRows));
+            this.confirmOnRecovery = confirmOnRecovery;
+            this.confirmDelayTicks = Math.max(20, Math.min(200, confirmDelayTicks));
+            this.maximumRecoveries = maximumRecoveries;
+
+            this.durabilityPenaltyEnabled = durabilityPenaltyEnabled;
+            this.durabilityBasePercent = Math.min(100.0, Math.max(0.0, durabilityBasePercent));
+            this.durabilityIncrementPercent = Math.max(0.0, durabilityIncrementPercent);
+            this.durabilityMaximumPercent = Math.min(100.0, Math.max(this.durabilityBasePercent, durabilityMaximumPercent));
+
+            this.currencyEnabled = currencyEnabled;
+            this.currencyBase = Math.max(0.0, currencyBase);
+            this.currencyIncrement = Math.max(0.0, currencyIncrement);
+            this.currencyMaximum = Math.max(this.currencyBase, currencyMaximum);
+
+            this.itemsEnabled = itemsEnabled;
+            this.itemsBaseMultiplier = Math.max(0.0, itemsBaseMultiplier);
+            this.itemsIncrementMultiplier = Math.max(0.0, itemsIncrementMultiplier);
+            this.itemsMaximumMultiplier = Math.max(this.itemsBaseMultiplier, itemsMaximumMultiplier);
+            this.tierItemRequirements = tierItemRequirements != null ? java.util.Collections.unmodifiableMap(tierItemRequirements) : java.util.Collections.emptyMap();
+
+            this.cooldownEnabled = cooldownEnabled;
+            this.cooldownBaseSeconds = Math.max(0L, cooldownBaseSeconds);
+            this.cooldownIncrementSeconds = Math.max(0L, cooldownIncrementSeconds);
+            this.cooldownMaximumSeconds = Math.max(this.cooldownBaseSeconds, cooldownMaximumSeconds);
+
+            this.msgNotLost = msgNotLost != null ? msgNotLost : "&c★ Recovery unavailable: Your pickaxe is not in a LOST state.";
+            this.msgBrokenCannotRecover = msgBrokenCannotRecover != null ? msgBrokenCannotRecover : "&c★ Recovery unavailable: Your pickaxe is broken, not lost. Repair it instead!";
+            this.msgOnCooldown = msgOnCooldown != null ? msgOnCooldown : "&c★ Recovery is on cooldown! Please wait %remaining%.";
+            this.msgInsufficientFunds = msgInsufficientFunds != null ? msgInsufficientFunds : "&c★ You need $%cost% to recover your pickaxe (Balance: $%balance%).";
+            this.msgMissingItems = msgMissingItems != null ? msgMissingItems : "&c★ You do not have all required items for recovery.";
+            this.msgInventoryFull = msgInventoryFull != null ? msgInventoryFull : "&c★ Recovery unavailable: You need at least 1 free inventory slot.";
+            this.msgEconomyUnavailable = msgEconomyUnavailable != null ? msgEconomyUnavailable : "&c★ Recovery unavailable: Economy provider (Vault) is currently disabled.";
+            this.msgAlreadyProcessing = msgAlreadyProcessing != null ? msgAlreadyProcessing : "&c★ Recovery transaction is already processing. Please wait.";
+            this.msgMaxRecoveries = msgMaxRecoveries != null ? msgMaxRecoveries : "&c★ You have reached the maximum allowed recoveries (%max%).";
+        }
+
+        public boolean isEnabled() { return enabled; }
+        public String getPermission() { return permission; }
+        public String getAdminForcePermission() { return adminForcePermission; }
+        public boolean isGuiEnabled() { return guiEnabled; }
+        public String getGuiTitle() { return guiTitle; }
+        public int getGuiRows() { return guiRows; }
+        public boolean isConfirmOnRecovery() { return confirmOnRecovery; }
+        public int getConfirmDelayTicks() { return confirmDelayTicks; }
+        public int getMaximumRecoveries() { return maximumRecoveries; }
+
+        public boolean isDurabilityPenaltyEnabled() { return durabilityPenaltyEnabled; }
+        public double getDurabilityBasePercent() { return durabilityBasePercent; }
+        public double getDurabilityIncrementPercent() { return durabilityIncrementPercent; }
+        public double getDurabilityMaximumPercent() { return durabilityMaximumPercent; }
+
+        public boolean isCurrencyEnabled() { return currencyEnabled; }
+        public double getCurrencyBase() { return currencyBase; }
+        public double getCurrencyIncrement() { return currencyIncrement; }
+        public double getCurrencyMaximum() { return currencyMaximum; }
+
+        public boolean isItemsEnabled() { return itemsEnabled; }
+        public double getItemsBaseMultiplier() { return itemsBaseMultiplier; }
+        public double getItemsIncrementMultiplier() { return itemsIncrementMultiplier; }
+        public double getItemsMaximumMultiplier() { return itemsMaximumMultiplier; }
+        public java.util.Map<String, java.util.List<RecoveryItemRequirement>> getTierItemRequirements() { return tierItemRequirements; }
+        public java.util.List<RecoveryItemRequirement> getItemRequirementsForTier(String tierName) {
+            return tierItemRequirements.getOrDefault(tierName != null ? tierName.toUpperCase() : "", java.util.Collections.emptyList());
+        }
+
+        public boolean isCooldownEnabled() { return cooldownEnabled; }
+        public long getCooldownBaseSeconds() { return cooldownBaseSeconds; }
+        public long getCooldownIncrementSeconds() { return cooldownIncrementSeconds; }
+        public long getCooldownMaximumSeconds() { return cooldownMaximumSeconds; }
+
+        public String getMsgNotLost() { return msgNotLost; }
+        public String getMsgBrokenCannotRecover() { return msgBrokenCannotRecover; }
+        public String getMsgOnCooldown() { return msgOnCooldown; }
+        public String getMsgInsufficientFunds() { return msgInsufficientFunds; }
+        public String getMsgMissingItems() { return msgMissingItems; }
+        public String getMsgInventoryFull() { return msgInventoryFull; }
+        public String getMsgEconomyUnavailable() { return msgEconomyUnavailable; }
+        public String getMsgAlreadyProcessing() { return msgAlreadyProcessing; }
+        public String getMsgMaxRecoveries() { return msgMaxRecoveries; }
     }
 }

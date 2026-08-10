@@ -101,6 +101,10 @@ public final class ToolProgression {
         return updatedAt;
     }
 
+    public ToolProgression withToolUuid(UUID newToolUuid) {
+        return new ToolProgression(Objects.requireNonNull(newToolUuid, "newToolUuid cannot be null"), ownerUuid, toolType, material, level, xp, overflowXp, state, currentDurability, schemaVersion, createdAt, Instant.now());
+    }
+
     public ToolProgression withLevel(int newLevel) {
         return new ToolProgression(toolUuid, ownerUuid, toolType, material, newLevel, xp, overflowXp, state, currentDurability, schemaVersion, createdAt, Instant.now());
     }

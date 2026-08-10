@@ -36,6 +36,13 @@ public class ToolDurabilityServiceImpl implements ToolDurabilityService {
 
     @Override
     public int getMaxDurability(String toolType, int level) {
+        // Attempt to resolve the actual ToolMaterial from display name or enum name
+        for (ToolMaterial tm : ToolMaterial.values()) {
+            if (tm.name().equalsIgnoreCase(toolType) || tm.getDisplayName().equalsIgnoreCase(toolType)) {
+                return configManager.getStat(tm, level).getMaxDurability();
+            }
+        }
+        // Fallback to WOODEN only if no match found
         return configManager.getStat(ToolMaterial.WOODEN, level).getMaxDurability();
     }
 
